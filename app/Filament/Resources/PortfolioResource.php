@@ -23,7 +23,42 @@ class PortfolioResource extends Resource
     {
         return $form
             ->schema([
-                //
+                \Filament\Forms\Components\Section::make('Thông tin Tác phẩm')
+                    ->schema([
+                        \Filament\Forms\Components\Select::make('category')
+                            ->label('Danh mục')
+                            ->options([
+                                'bride' => 'Cô Dâu',
+                                'event' => 'Sự Kiện',
+                                'personal' => 'Kỷ Yếu / Cá Nhân',
+                            ])
+                            ->required(),
+                            
+                        \Filament\Forms\Components\Select::make('type')
+                            ->label('Định dạng tệp')
+                            ->options([
+                                'image' => 'Hình ảnh (JPG, PNG)',
+                                'video' => 'Video (MP4 ngắn)',
+                            ])
+                            ->default('image')
+                            ->live() // Tự động làm mới form khi bạn đổi giữa Ảnh và Video
+                            ->required(),
+    
+                        \Filament\Forms\Components\FileUpload::make('file_path')
+                            ->label('Tải tệp lên')
+                            ->directory('portfolios')
+                            // Cho phép nhận cả Ảnh và Video MP4 luôn để tránh lỗi kẹt bộ lọc
+                            ->acceptedFileTypes(['image/*', 'video/mp4']) 
+                            ->maxSize(20480) // Tối đa 20MB
+                            ->required(),
+                            
+                        \Filament\Forms\Components\TextInput::make('title')
+                            ->label('Tiêu đề / Tên phong cách (Tùy chọn)'),
+                            
+                        \Filament\Forms\Components\Toggle::make('is_active')
+                            ->label('Hiển thị trên Web')
+                            ->default(true),
+                    ])
             ]);
     }
 
@@ -31,7 +66,18 @@ class PortfolioResource extends Resource
     {
         return $table
             ->columns([
-                //
+                \Filament\Tables\Columns\TextColumn::make('title')->label('Tiêu đề'),
+                \Filament\Tables\Columns\TextColumn::make('category')
+                    ->label('Danh mục')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'bride' => 'Cô Dâu',
+                        'event' => 'Sự Kiện',
+                        'personal' => 'Kỷ Yếu / Cá Nhân',
+                        default => $state,
+                    }),
+                \Filament\Tables\Columns\TextColumn::make('type')->label('Loại')->badge(),
+                \Filament\Tables\Columns\IconColumn::make('is_active')->label('Hiển thị')->boolean(),
             ])
             ->filters([
                 //

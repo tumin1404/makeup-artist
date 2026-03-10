@@ -10,4 +10,10 @@ class Category extends Model
     use HasFactory;
 
     protected $guarded = [];
+
+    // Khai báo: Một danh mục có thể chứa nhiều bài viết
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
+    }
 }
