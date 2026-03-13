@@ -35,6 +35,9 @@ class SettingResource extends Resource
                         'general' => 'Chung',
                         'contact' => 'Liên hệ',
                         'social' => 'Mạng xã hội',
+                        'info' => 'Thông tin',
+                        'stats' => 'Thống kê',
+                        'timeline' => 'Hành trình',
                     ])
                     ->default('general')
                     ->required()
@@ -63,6 +66,9 @@ class SettingResource extends Resource
                         'general' => 'gray',
                         'contact' => 'success',
                         'social' => 'info',
+                        'info' => 'warning',
+                        'stats' => 'danger',
+                        'timeline' => 'primary',
                         default => 'primary',
                     })->label('Nhóm'),
             ])

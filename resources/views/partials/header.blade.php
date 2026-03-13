@@ -1,7 +1,7 @@
 <header id="navbar" class="fixed w-full z-50 transition-all duration-500 bg-transparent py-4">
     <div class="max-w-7xl mx-auto flex justify-between items-center px-6 md:px-12">
         <a href="{{ url('/') }}" class="text-2xl font-serif font-bold text-dark tracking-wide hover:opacity-80 transition-opacity">
-            Luyện Thị Thảo
+            {{ $settings['site_name'] ?? 'Luyện Thị Thảo' }}
         </a>
 
         <nav class="hidden md:flex gap-10 text-sm font-medium tracking-wide">
