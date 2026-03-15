@@ -18,6 +18,7 @@ class CategoryResource extends Resource
 {
     protected static ?string $model = Category::class;
     protected static ?string $navigationIcon = 'heroicon-o-tag';
+    protected static ?string $navigationGroup = 'Quản lý Website';
     protected static ?string $navigationLabel = 'Danh mục chung';
     protected static ?string $modelLabel = 'Danh mục';
     protected static ?string $pluralModelLabel = 'Quản lý Danh mục';

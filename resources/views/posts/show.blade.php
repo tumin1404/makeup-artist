@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
-@section('title', $post->title . ' | Luyện Thị Thảo Makeup Artist')
+@section('title', $post->title . ' | ' . ($settings['site_name'] ?? 'Luyện Thị Thảo Makeup Artist'))
+
+@php
+    $getImg = fn($key, $default) => empty($settings[$key]) ? $default : (str_starts_with($settings[$key], 'http') ? $settings[$key] : asset('storage/' . $settings[$key]));
+@endphp
 
 @section('styles')
     <style>
@@ -73,7 +77,7 @@
             font-size: 1.2rem;
         }
         .article-content figcaption {
-        display: none !important;
+            display: none !important;
         }
     </style>
 @endsection
@@ -87,7 +91,7 @@
             <h1 class="text-4xl md:text-6xl font-serif text-dark mb-8 leading-tight">{{ $post->title }}</h1>
             
             <div class="flex items-center justify-center gap-4 text-sm font-light text-gray-500 uppercase tracking-wide">
-                <span><i class="far fa-calendar-alt mr-2"></i> {{ $post->published_at->format('d/m/Y') }}</span>
+                <span><i class="far fa-calendar-alt mr-2"></i> {{ $post->published_at ? $post->published_at->format('d/m/Y') : $post->created_at->format('d/m/Y') }}</span>
                 <span class="w-1 h-1 bg-gold rounded-full mx-2"></span>
                 <span><i class="far fa-clock mr-2"></i> 5 phút đọc</span>
             </div>
@@ -110,24 +114,24 @@
                 
                 <div class="flex items-center gap-4 text-sm font-medium uppercase tracking-widest text-dark">
                     <span>Chia sẻ:</span>
-                    <a href="#" class="hover:text-gold transition-colors"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#" class="hover:text-gold transition-colors"><i class="fab fa-pinterest-p"></i></a>
-                    <a href="#" class="hover:text-gold transition-colors"><i class="fas fa-link"></i></a>
+                    <a href="{{ $settings['social_facebook'] ?? '#' }}" target="_blank" class="hover:text-gold transition-colors"><i class="fab fa-facebook-f"></i></a>
+                    <a href="{{ $settings['social_instagram'] ?? '#' }}" target="_blank" class="hover:text-gold transition-colors"><i class="fab fa-instagram"></i></a>
+                    <a href="javascript:void(0)" onclick="navigator.clipboard.writeText(window.location.href); alert('Đã copy link!');" class="hover:text-gold transition-colors"><i class="fas fa-link"></i></a>
                 </div>
             </div>
 
             <div class="mt-16 bg-white p-8 rounded-2xl flex items-center gap-6 shadow-sm">
-                <img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348" alt="Luyện Thị Thảo" class="w-20 h-20 rounded-full object-cover grayscale opacity-80">
+                <img src="{{ $getImg('author_avatar', 'https://images.unsplash.com/photo-1596462502278-27bfdc403348') }}" alt="Author" class="w-20 h-20 rounded-full object-cover opacity-90 shadow-md">
                 <div>
-                    <h4 class="font-serif text-xl text-dark mb-1">Luyện Thị Thảo</h4>
-                    <p class="font-light text-sm text-gray-500 uppercase tracking-widest mb-2">Makeup Artist / Founder</p>
-                    <p class="font-light text-sm text-gray-600 leading-relaxed">Đam mê tôn vinh vẻ đẹp nguyên bản thông qua phong cách trang điểm Nude Luxury chuyên nghiệp.</p>
+                    <h4 class="font-serif text-xl text-dark mb-1">{{ $settings['author_name'] ?? 'Luyện Thị Thảo' }}</h4>
+                    <p class="font-light text-sm text-gray-500 uppercase tracking-widest mb-2">{{ $settings['author_title'] ?? 'Makeup Artist / Founder' }}</p>
+                    <p class="font-light text-sm text-gray-600 leading-relaxed">{{ $settings['author_bio'] ?? 'Đam mê tôn vinh vẻ đẹp nguyên bản thông qua phong cách trang điểm Nude Luxury chuyên nghiệp.' }}</p>
                 </div>
             </div>
         </footer>
     </article>
 
-    @if($relatedPosts->count() > 0)
+    @if(isset($relatedPosts) && $relatedPosts->count() > 0)
     <section class="py-20 bg-white">
         <div class="max-w-7xl mx-auto px-6">
             <div class="text-center mb-16" data-aos="fade-up">
@@ -147,7 +151,7 @@
                         <h3 class="text-xl font-serif text-dark mb-3 group-hover:text-gold transition-colors">
                             <a href="{{ route('posts.show', $rPost->slug) }}">{{ $rPost->title }}</a>
                         </h3>
-                        <span class="text-xs font-light text-gray-400">{{ $rPost->published_at->format('d/m/Y') }}</span>
+                        <span class="text-xs font-light text-gray-400">{{ $rPost->published_at ? $rPost->published_at->format('d/m/Y') : $rPost->created_at->format('d/m/Y') }}</span>
                     </div>
                 </div>
                 @endforeach

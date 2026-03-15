@@ -2,6 +2,10 @@
 
 @section('title', 'Bộ Sưu Tập | Luyện Thị Thảo Makeup Artist')
 
+@php
+    $getImg = fn($key, $default) => empty($settings[$key]) ? $default : (str_starts_with($settings[$key], 'http') ? $settings[$key] : asset('storage/' . $settings[$key]));
+@endphp
+
 @section('styles')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" />
     <style>
@@ -16,7 +20,7 @@
 @section('content')
     <section class="relative h-[55vh] flex items-center justify-center overflow-hidden">
         <div class="absolute inset-0 w-full h-full">
-            <img src="{{ $settings['portfolio_hero_bg'] ?? 'https://images.unsplash.com/photo-1519741497674-611481863552' }}" alt="Hero Portfolio" class="w-full h-full object-cover">
+            <img src="{{ $getImg('portfolio_hero_bg', 'https://images.unsplash.com/photo-1519741497674-611481863552') }}" class="w-full h-full object-cover">
             <div class="absolute inset-0 bg-dark/50"></div>
         </div>
         <div class="relative z-10 text-center text-white px-6" data-aos="fade-up">

@@ -2,6 +2,10 @@
 
 @section('title', 'Giới Thiệu | Luyện Thị Thảo Makeup Artist')
 
+@php
+    $getImg = fn($key, $default) => empty($settings[$key]) ? $default : (str_starts_with($settings[$key], 'http') ? $settings[$key] : asset('storage/' . $settings[$key]));
+@endphp
+
 @section('styles')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" />
@@ -19,7 +23,7 @@
 @section('content')
     <section class="relative h-[55vh] flex items-center justify-center overflow-hidden">
         <div class="absolute inset-0 w-full h-full">
-            <img src="{{ $settings['about_hero_bg'] ?? 'https://images.unsplash.com/photo-1519741497674-611481863552' }}" alt="Hero About" class="w-full h-full object-cover">
+            <img src="{{ $getImg('about_hero_bg', 'https://images.unsplash.com/photo-1519741497674-611481863552') }}" alt="Hero About" class="w-full h-full object-cover">
             <div class="absolute inset-0 bg-dark/50"></div>
         </div>
         <div class="relative z-10 text-center text-white px-6" data-aos="fade-up">
@@ -33,7 +37,7 @@
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-20">
             <div class="w-full md:w-5/12" data-aos="fade-right">
                 <div class="relative about-image-shadow rounded-2xl overflow-hidden">
-                    <img src="{{ $settings['about_me_image'] ?? 'https://images.unsplash.com/photo-1595959183082-7b570b7e08e2' }}" alt="Luyện Thị Thảo" class="w-full aspect-[4/5] object-cover">
+                    <img src="{{ $getImg('about_me_image', 'https://images.unsplash.com/photo-1595959183082-7b570b7e08e2') }}" class="w-full aspect-[4/5] object-cover">
                 </div>
             </div>
             <div class="w-full md:w-7/12" data-aos="fade-left">
@@ -42,7 +46,7 @@
                 <div class="space-y-6 text-gray-700 leading-relaxed font-light text-lg">
                     {!! nl2br(e($settings['about_me_content'] ?? "Hành trình đến với nghệ thuật trang điểm của tôi bắt nguồn từ niềm đam mê mãnh liệt với cái đẹp và khát khao đánh thức sự tự tin trong mỗi người phụ nữ.\n\nHoạt động chuyên nghiệp tại Hà Nội và Hưng Yên, tôi theo đuổi phong cách Nude Luxury – tinh giản, sang trọng nhưng đầy chiều sâu.")) !!}
                 </div>
-                <img src="{{ $settings['about_me_signature'] ?? 'https://images.unsplash.com/photo-1596462502278-27bfdc403348' }}" alt="Chữ ký" class="w-32 mt-10 opacity-60 mix-blend-multiply">
+                <img src="{{ $getImg('about_me_signature', 'https://images.unsplash.com/photo-1596462502278-27bfdc403348') }}" class="w-32 mt-10 opacity-60 mix-blend-multiply">
             </div>
         </div>
     </section>
@@ -52,7 +56,7 @@
             <span class="text-gold text-xs tracking-widest uppercase mb-4 block">The Inspiration</span>
             <h2 class="text-3xl font-serif text-dark mb-12">Thước Phim Cảm Hứng</h2>
             <div class="relative rounded-3xl overflow-hidden group shadow-2xl aspect-video cursor-pointer border-8 border-primary">
-                <img src="{{ $settings['about_video_cover'] ?? 'https://images.unsplash.com/photo-1522337660859-02fbefca4702' }}" alt="Video Cover" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                <img src="{{ $getImg('about_video_cover', 'https://images.unsplash.com/photo-1522337660859-02fbefca4702') }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
                 <div class="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors"></div>
                 <a href="{{ $settings['about_video_link'] ?? 'https://www.youtube.com/watch?v=maSuEtbPJ8Y' }}" class="glightbox absolute inset-0 flex items-center justify-center z-10">
                     <div class="w-20 h-20 bg-white/90 rounded-full flex items-center justify-center play-btn-pulse text-gold">
@@ -119,13 +123,14 @@
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="overflow-hidden rounded-2xl shadow-lg group" data-aos="fade-up">
-                    <img src="{{ $settings['about_gallery_1'] ?? 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1' }}" class="w-full h-[500px] object-cover group-hover:scale-110 transition-transform duration-700">
+                    <div class="overflow-hidden rounded-2xl shadow-lg group"><img src="{{ $getImg('about_gallery_1', 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1') }}" class="w-full h-[500px] object-cover group-hover:scale-110 transition-transform duration-700"></div>
                 </div>
                 <div class="overflow-hidden rounded-2xl shadow-lg group" data-aos="fade-up" data-aos-delay="100">
-                    <img src="{{ $settings['about_gallery_2'] ?? 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e' }}" class="w-full h-[500px] object-cover group-hover:scale-110 transition-transform duration-700">
+                    <div class="overflow-hidden rounded-2xl shadow-lg group"><img src="{{ $getImg('about_gallery_2', 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e') }}" class="w-full h-[500px] object-cover group-hover:scale-110 transition-transform duration-700"></div>
                 </div>
                 <div class="overflow-hidden rounded-2xl shadow-lg group" data-aos="fade-up" data-aos-delay="200">
-                    <img src="{{ $settings['about_gallery_3'] ?? 'https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93' }}" class="w-full h-[500px] object-cover group-hover:scale-110 transition-transform duration-700">
+                    
+            <div class="overflow-hidden rounded-2xl shadow-lg group"><img src="{{ $getImg('about_gallery_3', 'https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93') }}" class="w-full h-[500px] object-cover group-hover:scale-110 transition-transform duration-700"></div>
                 </div>
             </div>
         </div>
@@ -133,7 +138,7 @@
 
     <section id="academy" class="relative py-32 text-white text-center overflow-hidden">
         <div class="absolute inset-0 w-full h-full">
-            <img src="{{ $settings['about_academy_bg'] ?? 'https://images.unsplash.com/photo-1516975080664-ed2fc6a32937' }}" alt="Academy Background" class="w-full h-full object-cover">
+            <img src="{{ $getImg('about_academy_bg', 'https://images.unsplash.com/photo-1516975080664-ed2fc6a32937') }}" class="w-full h-full object-cover">
             <div class="absolute inset-0 bg-[#2a1f1f]/80"></div> </div>
 
         <div class="relative z-10 max-w-3xl mx-auto px-6" data-aos="zoom-in">

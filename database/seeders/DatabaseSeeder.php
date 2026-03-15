@@ -19,8 +19,9 @@ class DatabaseSeeder extends Seeder
     {
         // 1. Tạo tài khoản Admin mặc định
         User::updateOrCreate(
-            ['email' => 'admin@gmail.com'],
-            ['name' => 'Tú Mindx', 'password' => bcrypt('123456')]
+            ['email' => 'trantu143444@gmail.com'],
+            ['name' => 'Tú Mindx', 'password' => bcrypt('123456')],
+            ['email_verified_at' => now()]
         );
 
         // 2. Bảng Settings (Giữ nguyên)

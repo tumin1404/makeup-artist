@@ -48,6 +48,12 @@ Route::post('/booking', [BookingController::class, 'store'])->name('booking.stor
 | Phần này được bảo mật cực cao thông qua middleware 'auth' và 'can:access-admin'.
 | Filament mặc định bảo mật tại đường dẫn /admin.
 */
+use App\Models\Booking;
+
+Route::get('/booking/{booking}/invoice', function (Booking $booking) {
+    $booking->load('items'); // Lấy dữ liệu các dịch vụ con
+    return view('invoice', compact('booking'));
+})->name('booking.invoice');
 
 // Lưu ý: Filament tự động tạo các route như /admin/posts, /admin/services...
 // Bạn chỉ cần đảm bảo các Resource đã được đăng ký trong Filament.

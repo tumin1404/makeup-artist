@@ -16,8 +16,10 @@ class PostResource extends Resource
     protected static ?string $model = Post::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
-    
+    protected static ?string $navigationGroup = 'Quản lý Website';
     protected static ?string $navigationLabel = 'Tạp chí';
+    protected static ?string $modelLabel = 'Bài viết tạp chí';
+    protected static ?string $pluralModelLabel = 'Quản lý Tạp chí';
 
     public static function form(Form $form): Form
     {

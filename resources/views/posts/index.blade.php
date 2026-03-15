@@ -2,6 +2,10 @@
 
 @section('title', 'Tạp Chí Làm Đẹp | Luyện Thị Thảo Makeup Artist')
 
+@php
+    $getImg = fn($key, $default) => empty($settings[$key]) ? $default : (str_starts_with($settings[$key], 'http') ? $settings[$key] : asset('storage/' . $settings[$key]));
+@endphp
+
 @section('styles')
     <style>
         /* Hiệu ứng hover cho thẻ bài viết */
@@ -30,13 +34,15 @@
 @section('content')
     <section class="relative h-[55vh] flex items-center justify-center overflow-hidden">
         <div class="absolute inset-0 w-full h-full">
-            <img src="https://images.unsplash.com/photo-1516975080664-ed2fc6a32937" alt="Beauty Journal" class="w-full h-full object-cover transform scale-105 animate-[pulse_20s_ease-in-out_infinite_alternate]">
+            <img src="{{ $getImg('blog_hero_bg', 'https://images.unsplash.com/photo-1516975080664-ed2fc6a32937') }}" class="w-full h-full object-cover transform scale-105 animate-[pulse_20s_ease-in-out_infinite_alternate]">
             <div class="absolute inset-0 bg-dark/50"></div>
         </div>
         <div class="relative z-10 text-center text-white px-6 mt-16" data-aos="fade-up">
-            <span class="block text-sm font-light tracking-[0.2em] uppercase mb-4 text-gold">The Beauty Journal</span>
-            <h1 class="text-5xl md:text-6xl font-serif font-bold mb-4">Góc Chia Sẻ <span class="italic font-light">Kiến Thức</span></h1>
-            <p class="text-lg font-light opacity-90 max-w-xl mx-auto">Nơi cập nhật những xu hướng trang điểm mới nhất và bí quyết chăm sóc sắc đẹp từ chuyên gia.</p>
+            <span class="block text-sm font-light tracking-[0.2em] uppercase mb-4 text-gold">{{ $settings['blog_hero_pretitle'] ?? 'The Beauty Journal' }}</span>
+            <h1 class="text-5xl md:text-6xl font-serif font-bold mb-4">
+                {{ $settings['blog_hero_title'] ?? 'Góc Chia Sẻ' }} <span class="italic font-light">{{ $settings['blog_hero_subtitle'] ?? 'Kiến Thức' }}</span>
+            </h1>
+            <p class="text-lg font-light opacity-90 max-w-xl mx-auto">{{ $settings['blog_hero_desc'] ?? 'Nơi cập nhật những xu hướng trang điểm mới nhất và bí quyết chăm sóc sắc đẹp từ chuyên gia.' }}</p>
         </div>
     </section>
 

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Liên Hệ & Đặt Lịch | Luyện Thị Thảo Makeup Artist')
+@section('title', 'Liên Hệ & Đặt Lịch | ' . ($settings['site_name'] ?? 'Luyện Thị Thảo Makeup Artist'))
 
 @section('styles')
     <style>
@@ -45,16 +45,24 @@
                 <div>
                     <h3 class="text-xs uppercase tracking-[0.2em] font-bold mb-6" style="color: #c8a98d;">Thông tin liên lạc</h3>
                     <div class="space-y-4 font-light text-lg text-gray-800">
-                        <p class="hover:text-[#c8a98d] transition-colors"><a href="tel:0866072800">0866.072.800</a></p>
-                        <p class="hover:text-[#c8a98d] transition-colors"><a href="mailto:contact@luyenthithao.com">contact@luyenthithao.com</a></p>
+                        <p class="hover:text-[#c8a98d] transition-colors">
+                            <a href="tel:{{ str_replace('.', '', $settings['hotline'] ?? '0866072800') }}">
+                                {{ $settings['hotline'] ?? '0866.072.800' }}
+                            </a>
+                        </p>
+                        <p class="hover:text-[#c8a98d] transition-colors">
+                            <a href="mailto:{{ $settings['email'] ?? 'contact@luyenthithao.com' }}">
+                                {{ $settings['email'] ?? 'contact@luyenthithao.com' }}
+                            </a>
+                        </p>
                     </div>
                 </div>
 
                 <div>
                     <h3 class="text-xs uppercase tracking-[0.2em] font-bold mb-6" style="color: #c8a98d;">Địa điểm làm việc</h3>
                     <div class="space-y-4 font-light text-lg text-gray-800">
-                        <p>Hà Nội: Studio Nude Luxury, Q. Cầu Giấy</p>
-                        <p>Hưng Yên: TP. Hưng Yên & Lân cận</p>
+                        <p>Hà Nội: {{ $settings['address_hanoi'] ?? 'Studio Nude Luxury, Q. Cầu Giấy' }}</p>
+                        <p>Hưng Yên: {{ $settings['address_hungyen'] ?? 'TP. Hưng Yên & Lân cận' }}</p>
                         <p class="text-sm italic text-gray-500 mt-2">* Nhận booking toàn quốc cho cô dâu & sự kiện.</p>
                     </div>
                 </div>
@@ -109,7 +117,7 @@
                     </div>
 
                     <div class="pt-4">
-                        <button type="submit" class="w-full md:w-auto text-white px-12 py-4 rounded-full text-sm uppercase tracking-widest transition-all duration-500 shadow-xl" style="background-color: #3e2f2f; hover:background-color: #c8a98d;">
+                        <button type="submit" class="w-full md:w-auto text-white px-12 py-4 rounded-full text-sm uppercase tracking-widest transition-all duration-500 shadow-xl" style="background-color: #3e2f2f;">
                             Gửi yêu cầu đặt lịch
                         </button>
                     </div>
@@ -117,9 +125,7 @@
 
                 @if(session('success'))
                 <div class="absolute inset-0 bg-white/95 backdrop-blur-sm z-20 flex flex-col items-center justify-center text-center p-10">
-                    <div class="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mb-6 text-3xl">
-                        ✓
-                    </div>
+                    <div class="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mb-6 text-3xl">✓</div>
                     <h3 class="text-3xl font-serif mb-4" style="color: #3e2f2f;">Gửi thành công!</h3>
                     <p class="font-light text-gray-600 max-w-sm mb-6">{{ session('success') }}</p>
                     <a href="{{ route('booking.index') }}" class="uppercase tracking-widest text-xs font-bold border-b pb-1" style="color: #c8a98d; border-color: #c8a98d;">Gửi yêu cầu khác</a>
@@ -131,7 +137,11 @@
 
     <section class="py-20 px-6" data-aos="fade-up">
         <div class="max-w-7xl mx-auto rounded-3xl overflow-hidden shadow-lg h-[450px] map-container">
-            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3725.292557343657!2d105.79380721476238!3d21.021464986002035!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135ab4114841961%3A0xcb1b6d05f25a9474!2zQ-G6p3UgR2nhuqV5LCBIw6AgTuG7mWksIFZp4buHdCBOYW0!5e0!3m2!1svi!2s!4v1680000000000!5m2!1svi!2s" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+            @if(isset($settings['map_iframe']))
+                <iframe src="{{ $settings['map_iframe'] }}" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+            @else
+                <div class="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">Chưa cập nhật bản đồ</div>
+            @endif
         </div>
     </section>
 @endsection

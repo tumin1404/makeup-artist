@@ -18,7 +18,10 @@ class PortfolioResource extends Resource
     protected static ?string $model = Portfolio::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-
+    protected static ?string $navigationGroup = 'Quản lý Website';
+    protected static ?string $navigationLabel = 'Bộ sưu tập';
+    protected static ?string $modelLabel = 'Bộ sưu tập';
+    protected static ?string $pluralModelLabel = 'Quản lý bộ sưu tập';
     public static function form(Form $form): Form
     {
         return $form

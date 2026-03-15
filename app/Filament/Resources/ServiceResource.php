@@ -21,9 +21,10 @@ class ServiceResource extends Resource
 {
     protected static ?string $model = Service::class;
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationGroup = 'Quản lý Website';
     protected static ?string $navigationLabel = 'Dịch vụ / Báo giá';
     protected static ?string $modelLabel = 'Dịch vụ';
-    protected static ?string $pluralModelLabel = 'Danh sách Dịch vụ';
+    protected static ?string $pluralModelLabel = 'Quản lý Dịch vụ';
     protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form

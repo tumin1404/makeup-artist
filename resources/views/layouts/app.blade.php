@@ -86,5 +86,48 @@
         }
     </script>
     @yield('scripts')
+    @if(isset($settings['popup_active']) && $settings['popup_active'] == '1')
+    <div id="welcome-popup" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 hidden opacity-0 transition-opacity duration-500">
+        <div class="bg-white rounded-2xl overflow-hidden max-w-lg w-full mx-4 relative transform scale-95 transition-transform duration-500" id="popup-content">
+            <button onclick="closePopup()" class="absolute top-4 right-4 w-8 h-8 bg-black/20 hover:bg-black/40 rounded-full flex items-center justify-center text-white z-10 transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            @php 
+                $popupImg = $settings['popup_image'] ?? 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1';
+                $popupSrc = str_starts_with($popupImg, 'http') ? $popupImg : asset('storage/' . $popupImg);
+            @endphp
+            <img src="{{ $popupSrc }}" class="w-full h-64 object-cover">
+
+            <div class="p-8 text-center">
+                <h3 class="text-3xl font-serif text-dark mb-3">{{ $settings['popup_title'] ?? 'Thông báo' }}</h3>
+                <p class="text-gray-600 font-light mb-6">{{ $settings['popup_desc'] ?? '' }}</p>
+                @if(!empty($settings['popup_link']))
+                <a href="{{ $settings['popup_link'] }}" class="inline-block bg-[#c8a98d] text-white px-8 py-3 rounded-full text-sm uppercase tracking-widest hover:bg-[#3e2f2f] transition-colors">
+                    Xem chi tiết
+                </a>
+                @endif
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!sessionStorage.getItem('popup_closed')) {
+                const popup = document.getElementById('welcome-popup');
+                const content = document.getElementById('popup-content');
+                setTimeout(() => {
+                    popup.classList.remove('hidden');
+                    setTimeout(() => { popup.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 50);
+                }, 1000); 
+            }
+        });
+        function closePopup() {
+            const popup = document.getElementById('welcome-popup');
+            const content = document.getElementById('popup-content');
+            popup.classList.add('opacity-0'); content.classList.add('scale-95');
+            setTimeout(() => { popup.classList.add('hidden'); sessionStorage.setItem('popup_closed', 'true'); }, 500);
+        }
+    </script>
+@endif
 </body>
 </html>

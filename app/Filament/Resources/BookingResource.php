@@ -16,16 +16,19 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Forms\Components\Repeater;
+use App\Models\Service;
+use Filament\Tables\Actions\Action;
 
 class BookingResource extends Resource
 {
     protected static ?string $model = Booking::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
-    protected static ?string $navigationLabel = 'Đặt lịch / Booking';
-    protected static ?string $modelLabel = 'Đơn Đặt Lịch';
-    // Tên hiển thị số nhiều (Sửa lỗi "Lịches" ở tiêu đề trang danh sách)
-    protected static ?string $pluralModelLabel = 'Danh Sách Đặt Lịch';
+    protected static ?string $navigationGroup = 'Quản lý Website';
+    protected static ?string $navigationLabel = 'Đặt lịch';
+    protected static ?string $modelLabel = 'Đặt lịch';
+    protected static ?string $pluralModelLabel = 'Quản lý đặt lịch';
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
@@ -85,6 +88,36 @@ class BookingResource extends Resource
                             ->label('Ghi chú của Admin (Khách không thấy)')
                             ->columnSpanFull(),
                     ]),
+                Section::make('Danh sách Dịch vụ & Lịch trình')
+                    ->schema([
+                        Repeater::make('items')
+                            ->relationship()
+                            ->hiddenLabel() // Ẩn label gốc của Repeater đi cho đỡ lặp chữ
+                            ->addActionLabel('Thêm lịch trình / dịch vụ')
+                            ->schema([
+                                Select::make('service_name')
+                                    ->label('Chọn dịch vụ')
+                                    ->options(Service::pluck('name', 'name'))
+                                    ->searchable()
+                                    ->live()
+                                    ->afterStateUpdated(function ($state, callable $set) {
+                                        $service = Service::where('name', $state)->first();
+                                        if ($service) {
+                                            // Lọc bỏ chữ (VD: "VNĐ", dấu phẩy), chỉ lấy số từ price_text để điền vào ô Đơn giá
+                                            $priceNumber = preg_replace('/[^0-9]/', '', $service->price_text);
+                                            $set('price', $priceNumber ?: 0); 
+                                        }
+                                    })
+                                    ->required()
+                                    ->columnSpan(2),
+                                DateTimePicker::make('service_date')->label('Ngày giờ thực hiện')->required()->columnSpan(2),
+                                TextInput::make('price')->label('Đơn giá')->numeric()->required()->columnSpan(1),
+                                TextInput::make('quantity')->label('Số lượng')->numeric()->default(1)->columnSpan(1),
+                                TextInput::make('description')->label('Ghi chú thêm')->columnSpan(2),
+                            ])
+                            ->columns(4)
+                    ])
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -146,6 +179,12 @@ class BookingResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Action::make('print')
+                    ->label('In Hoá Đơn')
+                    ->icon('heroicon-o-printer')
+                    ->color('success')
+                    ->url(fn ($record) => route('booking.invoice', $record->id))
+                    ->openUrlInNewTab(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

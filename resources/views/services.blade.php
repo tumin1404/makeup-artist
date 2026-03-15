@@ -2,9 +2,12 @@
 
 @section('title', 'Dịch Vụ & Báo Giá | Luyện Thị Thảo Makeup Artist')
 
+@php
+    $getImg = fn($key, $default) => empty($settings[$key]) ? $default : (str_starts_with($settings[$key], 'http') ? $settings[$key] : asset('storage/' . $settings[$key]));
+@endphp
+
 @section('styles')
     <style>
-        /* Hiệu ứng trượt cho Menu Dịch Vụ */
         .service-row {
             border-bottom: 1px solid rgba(200, 169, 141, 0.3);
             transition: all 0.4s ease;
@@ -15,8 +18,6 @@
             border-bottom-color: transparent;
             box-shadow: -10px 10px 30px rgba(0,0,0,0.02);
         }
-
-        /* Tinh chỉnh đường nối cho Quy trình làm việc */
         .process-line::before {
             content: '';
             position: absolute;
@@ -36,12 +37,14 @@
 @section('content')
     <section class="relative h-[50vh] flex items-center justify-center overflow-hidden">
         <div class="absolute inset-0 w-full h-full">
-            <img src="https://images.unsplash.com/photo-1487412947147-5cebf100ffc2" alt="Makeup Services" class="w-full h-full object-cover transform scale-105 animate-[pulse_20s_ease-in-out_infinite_alternate]">
+            <img src="{{ $getImg('service_hero_bg', 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2') }}" class="w-full h-full object-cover transform scale-105 animate-[pulse_20s_ease-in-out_infinite_alternate]">
             <div class="absolute inset-0 bg-dark/60"></div>
         </div>
         <div class="relative z-10 text-center text-white px-6 mt-16" data-aos="fade-up">
             <span class="block text-sm font-light tracking-[0.2em] uppercase mb-4 text-gold">Premium Services</span>
-            <h1 class="text-5xl md:text-6xl font-serif font-bold mb-4">Gói Dịch Vụ <span class="italic font-light text-primary">Đặc Quyền</span></h1>
+            <h1 class="text-5xl md:text-6xl font-serif font-bold mb-4">
+                {{ $settings['service_hero_title'] ?? 'Gói Dịch Vụ' }} <span class="italic font-light text-primary">{{ $settings['service_hero_subtitle'] ?? 'Đặc Quyền' }}</span>
+            </h1>
         </div>
     </section>
 
@@ -101,29 +104,32 @@
         <div class="max-w-6xl mx-auto">
             <div class="text-center mb-24" data-aos="fade-up">
                 <span class="text-gold text-sm tracking-widest uppercase mb-2 block">How it works</span>
-                <h2 class="text-4xl md:text-5xl font-serif text-dark">Quy Trình Làm Việc</h2>
+                <h2 class="text-4xl md:text-5xl font-serif text-dark">{{ $settings['process_title'] ?? 'Quy Trình Làm Việc' }}</h2>
             </div>
 
             <div class="grid md:grid-cols-4 gap-10 relative">
                 <div class="text-center relative process-line z-10" data-aos="fade-right" data-aos-delay="0">
                     <div class="w-12 h-12 mx-auto bg-primary text-gold border border-gold rounded-full flex items-center justify-center font-serif text-xl mb-6 relative z-10">1</div>
-                    <h4 class="text-lg font-serif text-dark mb-3">Tư Vấn & Đặt Lịch</h4>
-                    <p class="font-light text-sm text-gray-600 px-4">Lắng nghe mong muốn, phân tích tình trạng da và chốt concept phù hợp nhất.</p>
+                    <h4 class="text-lg font-serif text-dark mb-3">{{ $settings['process_step_1_title'] ?? 'Tư Vấn & Đặt Lịch' }}</h4>
+                    <p class="font-light text-sm text-gray-600 px-4">{{ $settings['process_step_1_desc'] ?? 'Lắng nghe mong muốn, phân tích tình trạng da và chốt concept phù hợp nhất.' }}</p>
                 </div>
+                
                 <div class="text-center relative process-line z-10" data-aos="fade-right" data-aos-delay="150">
                     <div class="w-12 h-12 mx-auto bg-primary text-gold border border-gold rounded-full flex items-center justify-center font-serif text-xl mb-6 relative z-10">2</div>
-                    <h4 class="text-lg font-serif text-dark mb-3">Giai Đoạn Chuẩn Bị</h4>
-                    <p class="font-light text-sm text-gray-600 px-4">Hướng dẫn bạn cách skincare trước ngày quan trọng để lớp nền ăn tệp hoàn hảo.</p>
+                    <h4 class="text-lg font-serif text-dark mb-3">{{ $settings['process_step_2_title'] ?? 'Giai Đoạn Chuẩn Bị' }}</h4>
+                    <p class="font-light text-sm text-gray-600 px-4">{{ $settings['process_step_2_desc'] ?? 'Hướng dẫn bạn cách skincare trước ngày quan trọng để lớp nền ăn tệp hoàn hảo.' }}</p>
                 </div>
+                
                 <div class="text-center relative process-line z-10" data-aos="fade-right" data-aos-delay="300">
                     <div class="w-12 h-12 mx-auto bg-primary text-gold border border-gold rounded-full flex items-center justify-center font-serif text-xl mb-6 relative z-10">3</div>
-                    <h4 class="text-lg font-serif text-dark mb-3">Ngày Tỏa Sáng</h4>
-                    <p class="font-light text-sm text-gray-600 px-4">Đến đúng giờ, chuẩn bị 100% dụng cụ vô trùng và thực hiện makeup chuyên nghiệp.</p>
+                    <h4 class="text-lg font-serif text-dark mb-3">{{ $settings['process_step_3_title'] ?? 'Ngày Tỏa Sáng' }}</h4>
+                    <p class="font-light text-sm text-gray-600 px-4">{{ $settings['process_step_3_desc'] ?? 'Đến đúng giờ, chuẩn bị 100% dụng cụ vô trùng và thực hiện makeup chuyên nghiệp.' }}</p>
                 </div>
+                
                 <div class="text-center relative z-10" data-aos="fade-right" data-aos-delay="450">
                     <div class="w-12 h-12 mx-auto bg-gold text-white rounded-full flex items-center justify-center font-serif text-xl mb-6 shadow-lg">4</div>
-                    <h4 class="text-lg font-serif text-gold mb-3">Hoàn Thiện</h4>
-                    <p class="font-light text-sm text-gray-600 px-4">Dặm lại lần cuối, mặc trang phục và lưu lại những khung hình rạng rỡ nhất.</p>
+                    <h4 class="text-lg font-serif text-gold mb-3">{{ $settings['process_step_4_title'] ?? 'Hoàn Thiện' }}</h4>
+                    <p class="font-light text-sm text-gray-600 px-4">{{ $settings['process_step_4_desc'] ?? 'Dặm lại lần cuối, mặc trang phục và lưu lại những khung hình rạng rỡ nhất.' }}</p>
                 </div>
             </div>
         </div>
