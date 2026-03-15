@@ -87,7 +87,7 @@
     </script>
     @yield('scripts')
     @if(isset($settings['popup_active']) && $settings['popup_active'] == '1')
-    <div id="welcome-popup" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 hidden opacity-0 transition-opacity duration-500">
+    <div id="welcome-popup" class="fixed inset-0 z-[100] items-center justify-center bg-black/70 hidden opacity-0 transition-opacity duration-500">
         <div class="bg-white rounded-2xl overflow-hidden max-w-lg w-full mx-4 relative transform scale-95 transition-transform duration-500" id="popup-content">
             <button onclick="closePopup()" class="absolute top-4 right-4 w-8 h-8 bg-black/20 hover:bg-black/40 rounded-full flex items-center justify-center text-white z-10 transition-colors">
                 <i class="fas fa-times"></i>
@@ -117,15 +117,24 @@
                 const content = document.getElementById('popup-content');
                 setTimeout(() => {
                     popup.classList.remove('hidden');
-                    setTimeout(() => { popup.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 50);
-                }, 1000); 
+                    popup.classList.add('flex');
+                    setTimeout(() => { 
+                        popup.classList.remove('opacity-0'); 
+                        content.classList.remove('scale-95'); 
+                    }, 50);
+                }, 1000);
             }
         });
         function closePopup() {
             const popup = document.getElementById('welcome-popup');
             const content = document.getElementById('popup-content');
-            popup.classList.add('opacity-0'); content.classList.add('scale-95');
-            setTimeout(() => { popup.classList.add('hidden'); sessionStorage.setItem('popup_closed', 'true'); }, 500);
+            popup.classList.add('opacity-0'); 
+            content.classList.add('scale-95');
+            setTimeout(() => { 
+                popup.classList.add('hidden'); 
+                popup.classList.remove('flex'); // Xóa flex khi ẩn đi để tránh xung đột
+                sessionStorage.setItem('popup_closed', 'true'); 
+            }, 500);
         }
     </script>
 @endif

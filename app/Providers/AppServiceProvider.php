@@ -9,6 +9,7 @@ use App\Models\Setting;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,6 +26,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Nếu app đang chạy qua Cloudflare (có APP_URL dạng https) thì ép dùng HTTPS
+        if (str_contains(config('app.url'), 'https')) {
+            URL::forceScheme('https');
+        }
         // Báo cho hệ thống dùng form email vừa tạo
         VerifyEmail::toMailUsing(function (object $notifiable, string $url) {
             return (new MailMessage)
