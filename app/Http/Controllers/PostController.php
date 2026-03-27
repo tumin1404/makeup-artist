@@ -3,39 +3,48 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Category;
+use App\Models\Post;
 
 class PostController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Lấy bài viết mới nhất và được đánh dấu nổi bật
-        $featuredPost = \App\Models\Post::where('status', 'published')
-            ->where('is_featured', true)
-            ->latest('published_at')
-            ->first();
+        $categorySlug = $request->query('category');
 
-        // Lấy các bài viết còn lại (không bao gồm bài nổi bật trên)
-        $posts = \App\Models\Post::where('status', 'published')
-            ->when($featuredPost, function ($query) use ($featuredPost) {
-                return $query->where('id', '!=', $featuredPost->id);
+        // 1. Chỉ lấy các danh mục thuộc loại bài viết (Tạp chí)
+        $categories = Category::where('type', Category::TYPE_POST)->orderBy('order')->get();
+
+        // 2. Query cơ bản kèm relationship để tối ưu N+1
+        $query = Post::with('category')->where('status', 'published');
+
+        // 3. Lọc bài viết nếu URL có chứa ?category=slug
+        if ($categorySlug) {
+            $query->whereHas('category', function ($q) use ($categorySlug) {
+                $q->where('slug', $categorySlug);
+            });
+        }
+
+        // 4. Lấy bài viết nổi bật (theo query đã lọc)
+        $featuredPost = (clone $query)->where('is_featured', true)->latest('published_at')->first();
+
+        // 5. Lấy danh sách bài viết còn lại phân trang
+        $posts = (clone $query)->when($featuredPost, function ($q) use ($featuredPost) {
+                return $q->where('id', '!=', $featuredPost->id);
             })
             ->latest('published_at')
             ->paginate(9);
 
-        // Lấy danh mục bài viết
-        $categories = \App\Models\Category::all();
-
         return view('posts.index', compact('featuredPost', 'posts', 'categories'));
     }
+
     public function show($slug)
     {
-        // Tìm bài viết theo slug, nếu không thấy trả về 404
-        $post = \App\Models\Post::where('slug', $slug)
+        $post = Post::with('category')->where('slug', $slug)
             ->where('status', 'published')
             ->firstOrFail();
         
-        // Lấy 3 bài viết liên quan (cùng danh mục) để hiển thị ở cuối trang
-        $relatedPosts = \App\Models\Post::where('category_id', $post->category_id)
+        $relatedPosts = Post::where('category_id', $post->category_id)
             ->where('id', '!=', $post->id)
             ->where('status', 'published')
             ->latest()

@@ -27,7 +27,7 @@
         </div>
 
         <div class="border-t border-white/10 pt-8 text-[11px] text-white/40 font-light tracking-widest leading-loose uppercase">
-            {!! nl2br(e($settings['footer_copyright'] ?? "© 2026 Luyện Thị Thảo Makeup Artist. All Rights Reserved. \n Hà Nội & Hưng Yên.")) !!}
+            {!! nl2br(e($settings['footer_copyright'] ?? "© " . date('Y') . " " . ($settings['site_name'] ?? '') . ". All Rights Reserved. \n Hưng Yên & Hà Nội.")) !!}
         </div>
     </div>
 </footer>

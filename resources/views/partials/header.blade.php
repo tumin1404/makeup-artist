@@ -1,7 +1,11 @@
 <header id="navbar" class="fixed w-full z-50 transition-all duration-500 bg-transparent py-4">
     <div class="max-w-7xl mx-auto flex justify-between items-center px-6 md:px-12">
-        <a href="/" class="text-2xl font-serif font-bold text-dark tracking-wide hover:opacity-80 transition-opacity">
-            {{ $settings['site_name'] ?? 'Luyện Thị Thảo' }}
+        <a href="/" class="text-2xl font-serif font-bold text-dark tracking-wide hover:opacity-80 transition-opacity flex items-center gap-2">
+            @if(!empty($settings['site_logo']))
+                <img src="{{ asset('storage/' . $settings['site_logo']) }}" alt="{{ $settings['site_name'] ?? 'Logo' }}" class="h-9 w-auto object-contain">
+            @else
+                {{ $settings['site_name'] ?? 'Makeup Artist' }}
+            @endif
         </a>
 
         <nav class="hidden md:flex gap-10 text-sm font-medium tracking-wide">

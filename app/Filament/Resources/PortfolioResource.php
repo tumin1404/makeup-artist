@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Models\Category;
 
 class PortfolioResource extends Resource
 {
@@ -28,13 +29,16 @@ class PortfolioResource extends Resource
             ->schema([
                 \Filament\Forms\Components\Section::make('Thông tin Tác phẩm')
                     ->schema([
-                        \Filament\Forms\Components\Select::make('category')
+                        Forms\Components\Select::make('category_id')
                             ->label('Danh mục')
-                            ->options([
-                                'bride' => 'Cô Dâu',
-                                'event' => 'Sự Kiện',
-                                'personal' => 'Kỷ Yếu / Cá Nhân',
-                            ])
+                            ->relationship(
+                                name: 'category', 
+                                titleAttribute: 'name', 
+                                // Chỉ lấy các danh mục dành cho Portfolio
+                                modifyQueryUsing: fn (Builder $query) => $query->where('type', Category::TYPE_PORTFOLIO)
+                            )
+                            ->searchable()
+                            ->preload()
                             ->required(),
                             
                         \Filament\Forms\Components\Select::make('type')
@@ -52,7 +56,10 @@ class PortfolioResource extends Resource
                             ->directory('portfolios')
                             // Cho phép nhận cả Ảnh và Video MP4 luôn để tránh lỗi kẹt bộ lọc
                             ->acceptedFileTypes(['image/*', 'video/mp4']) 
-                            ->maxSize(20480) // Tối đa 20MB
+                            ->imageResizeTargetWidth(1080) // Tự động thu nhỏ ảnh lớn xuống tối đa ngang 1080px
+                            ->maxSize(15360)
+                            ->panelAspectRatio('2:1') // THÊM DÒNG NÀY: Khóa cứng tỷ lệ khung
+                            ->panelLayout('integrated')
                             ->required(),
                             
                         \Filament\Forms\Components\TextInput::make('title')
@@ -69,16 +76,16 @@ class PortfolioResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ImageColumn::make('file_path')
+                    ->label('Hình ảnh')
+                    ->size(50) // Kích thước thumbnail vuông 50px
+                    ->disk('public') // Thêm dòng này để ép Filament đọc đúng thư mục
+                    ->circular(),
                 \Filament\Tables\Columns\TextColumn::make('title')->label('Tiêu đề'),
-                \Filament\Tables\Columns\TextColumn::make('category')
+                Tables\Columns\TextColumn::make('category.name')
                     ->label('Danh mục')
                     ->badge()
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'bride' => 'Cô Dâu',
-                        'event' => 'Sự Kiện',
-                        'personal' => 'Kỷ Yếu / Cá Nhân',
-                        default => $state,
-                    }),
+                    ->color('info'),
                 \Filament\Tables\Columns\TextColumn::make('type')->label('Loại')->badge(),
                 \Filament\Tables\Columns\IconColumn::make('is_active')->label('Hiển thị')->boolean(),
             ])

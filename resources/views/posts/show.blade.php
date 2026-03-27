@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $post->title . ' | ' . ($settings['site_name'] ?? 'Luyện Thị Thảo Makeup Artist'))
+@section('title', $post->title . ' | ' . ($settings['site_name'] ?? ''))
 
 @php
     $getImg = fn($key, $default) => empty($settings[$key]) ? $default : (str_starts_with($settings[$key], 'http') ? $settings[$key] : asset('storage/' . $settings[$key]));
@@ -123,7 +123,7 @@
             <div class="mt-16 bg-white p-8 rounded-2xl flex items-center gap-6 shadow-sm">
                 <img src="{{ $getImg('author_avatar', 'https://images.unsplash.com/photo-1596462502278-27bfdc403348') }}" alt="Author" class="w-20 h-20 rounded-full object-cover opacity-90 shadow-md">
                 <div>
-                    <h4 class="font-serif text-xl text-dark mb-1">{{ $settings['author_name'] ?? 'Luyện Thị Thảo' }}</h4>
+                    <h4 class="font-serif text-xl text-dark mb-1">{{ $settings['author_name'] ?? '' }}</h4>
                     <p class="font-light text-sm text-gray-500 uppercase tracking-widest mb-2">{{ $settings['author_title'] ?? 'Makeup Artist / Founder' }}</p>
                     <p class="font-light text-sm text-gray-600 leading-relaxed">{{ $settings['author_bio'] ?? 'Đam mê tôn vinh vẻ đẹp nguyên bản thông qua phong cách trang điểm Nude Luxury chuyên nghiệp.' }}</p>
                 </div>

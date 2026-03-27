@@ -30,23 +30,30 @@ class AppServiceProvider extends ServiceProvider
         if (str_contains(config('app.url'), 'https')) {
             URL::forceScheme('https');
         }
+
         // Báo cho hệ thống dùng form email vừa tạo
         VerifyEmail::toMailUsing(function (object $notifiable, string $url) {
+            $siteName = Setting::get('site_name', 'Hệ thống'); // Lấy tên động
+            
             return (new MailMessage)
-                ->subject('Xác thực tài khoản Admin - Luyện Thị Thảo Makeup')
-                ->view('emails.verify-email', ['url' => $url, 'user' => $notifiable]);
+                ->subject("Xác thực tài khoản Admin - {$siteName}")
+                ->view('emails.verify-email', ['url' => $url, 'user' => $notifiable, 'siteName' => $siteName]);
         });
+
         // Thêm đoạn này cho Reset Password
         ResetPassword::toMailUsing(function (object $notifiable, string $token) {
+            $siteName = Setting::get('site_name', 'Hệ thống'); // Lấy tên động
             $url = filament()->getResetPasswordUrl($token, $notifiable);
 
             return (new MailMessage)
-                ->subject('Đặt lại mật khẩu - Luyện Thị Thảo Makeup')
-                ->view('emails.reset-password', ['url' => $url, 'user' => $notifiable]);
+                ->subject("Đặt lại mật khẩu - {$siteName}")
+                ->view('emails.reset-password', ['url' => $url, 'user' => $notifiable, 'siteName' => $siteName]);
         });
+
         \BezhanSalleh\FilamentLanguageSwitch\LanguageSwitch::configureUsing(function (\BezhanSalleh\FilamentLanguageSwitch\LanguageSwitch $switch) {
             $switch->locales(['vi', 'en']); // Cài đặt 2 ngôn ngữ Việt và Anh
         });
+
         // Kéo toàn bộ dữ liệu setting và chia sẻ cho tất cả các file view
         if (Schema::hasTable('settings')) {
             $settings = Setting::pluck('value', 'key')->toArray();

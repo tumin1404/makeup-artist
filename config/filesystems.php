@@ -41,10 +41,9 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+            'url' => '/storage', // Sửa dòng này: Xóa phần env('APP_URL') đi
             'visibility' => 'public',
             'throw' => false,
-            'report' => false,
         ],
 
         's3' => [

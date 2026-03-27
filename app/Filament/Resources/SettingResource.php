@@ -23,7 +23,6 @@ class SettingResource extends Resource
     {
         return $form
             ->schema([
-                // Thay vì dùng Select cứng, ta dùng TextInput với Datalist
                 Forms\Components\TextInput::make('group')
                     ->datalist(fn () => \App\Models\Setting::pluck('group')->unique()->toArray())
                     ->required()
@@ -39,35 +38,52 @@ class SettingResource extends Resource
                     ])
                     ->default('text')
                     ->required()
-                    ->live() // Kích hoạt form động
+                    ->live()
                     ->label('Loại dữ liệu'),
 
                 Forms\Components\TextInput::make('key')
                     ->required()
                     ->unique(ignoreRecord: true)
+                    ->disabledOn('edit')
                     ->label('Từ khóa (Key)'),
 
-                // Các ô Value tự động ẩn/hiện dựa theo Loại dữ liệu
-                Forms\Components\TextInput::make('value')
-                    ->label('Giá trị')
+                Forms\Components\TextInput::make('description')
+                    ->label('Mô tả chức năng (Tiếng Việt)')
                     ->required()
+                    ->placeholder('Ví dụ: Bật/Tắt thông báo trang chủ')
+                    ->columnSpanFull(),
+
+                Forms\Components\TextInput::make('value')
+                    ->label('Giá trị cài đặt')
+                    ->helperText(fn (\Filament\Forms\Get $get) => $get('description'))
+                    ->required()
+                    ->columnSpanFull()
                     ->visible(fn (\Filament\Forms\Get $get) => $get('type') === 'text'),
 
                 Forms\Components\Textarea::make('value')
-                    ->label('Giá trị')
+                    ->label('Giá trị cài đặt')
+                    ->helperText(fn (\Filament\Forms\Get $get) => $get('description'))
                     ->required()
+                    ->columnSpanFull()
                     ->visible(fn (\Filament\Forms\Get $get) => $get('type') === 'textarea'),
 
                 Forms\Components\RichEditor::make('value')
-                    ->label('Giá trị')
+                    ->label('Giá trị cài đặt')
+                    ->helperText(fn (\Filament\Forms\Get $get) => $get('description'))
                     ->required()
+                    ->columnSpanFull()
                     ->visible(fn (\Filament\Forms\Get $get) => $get('type') === 'rich_editor'),
 
+                // ĐÃ CẬP NHẬT: Hỗ trợ thêm định dạng Favicon và giới hạn dung lượng
                 Forms\Components\FileUpload::make('value')
                     ->label('Tải ảnh lên')
+                    ->helperText(fn (\Filament\Forms\Get $get) => $get('description'))
                     ->image()
-                    ->directory('settings') // Lưu vào thư mục storage/app/public/settings
+                    ->directory('settings')
+                    ->acceptedFileTypes(['image/x-icon', 'image/png', 'image/svg+xml', 'image/jpeg', 'image/webp']) 
+                    ->maxSize(2048) // Tối đa 2MB
                     ->required()
+                    ->columnSpanFull()
                     ->visible(fn (\Filament\Forms\Get $get) => $get('type') === 'image'),
             ]);
     }
@@ -76,13 +92,10 @@ class SettingResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('key')->searchable()->label('Từ khóa'),
-                Tables\Columns\TextColumn::make('value')->limit(50)->searchable()->label('Giá trị'),
                 Tables\Columns\TextColumn::make('group')
                     ->badge()
                     ->sortable()
                     ->color(function (string $state) {
-                        // 1. Giữ nguyên màu cho các nhóm mặc định
                         $defaults = [
                             'general' => 'gray',
                             'contact' => 'success',
@@ -97,7 +110,6 @@ class SettingResource extends Resource
                             return $defaults[$state];
                         }
 
-                        // 2. Danh sách bảng màu đẹp mở rộng của Filament cho các nhóm mới
                         $colors = [
                             \Filament\Support\Colors\Color::Pink,
                             \Filament\Support\Colors\Color::Purple,
@@ -109,16 +121,29 @@ class SettingResource extends Resource
                             \Filament\Support\Colors\Color::Emerald,
                         ];
 
-                        // 3. Chuyển tên nhóm thành số và gán 1 màu cố định từ danh sách trên
                         return $colors[abs(crc32($state)) % count($colors)];
                     })
                     ->label('Nhóm'),
+
+                Tables\Columns\TextColumn::make('key')
+                    ->searchable()
+                    ->fontFamily('mono')
+                    ->label('Từ khóa'),
+
+                Tables\Columns\TextColumn::make('description')
+                    ->searchable()
+                    ->wrap()
+                    ->label('Mô tả chức năng'),
+
+                Tables\Columns\TextColumn::make('value')
+                    ->limit(50)
+                    ->searchable()
+                    ->label('Giá trị hiện tại'),
             ])
             ->filters([
-                // Thêm bộ lọc nhanh trên góc phải
                 Tables\Filters\SelectFilter::make('group')
-                ->options(fn () => \App\Models\Setting::pluck('group', 'group')->unique()->toArray())
-                ->label('Lọc theo nhóm'),
+                    ->options(fn () => \App\Models\Setting::pluck('group', 'group')->unique()->toArray())
+                    ->label('Lọc theo nhóm'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -127,7 +152,8 @@ class SettingResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->defaultSort('group', 'asc');
     }
 
     public static function getRelations(): array

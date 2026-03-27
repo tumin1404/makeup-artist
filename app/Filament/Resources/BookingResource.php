@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\BookingResource\Pages;
 use App\Models\Booking;
+use App\Models\Service;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -14,11 +15,11 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DateTimePicker;   
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Repeater;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Forms\Components\Repeater;
-use App\Models\Service;
 use Filament\Tables\Actions\Action;
+use Illuminate\Support\Str;
 
 class BookingResource extends Resource
 {
@@ -56,18 +57,22 @@ class BookingResource extends Resource
                             ->maxLength(255),
                     ])->columns(2),
 
-                Section::make('Chi tiết dịch vụ')
+                Section::make('Chi tiết dịch vụ yêu cầu')
                     ->schema([
-                        Select::make('service_id')
-                            ->relationship('service', 'name')
-                            ->label('Dịch vụ quan tâm')
+                        Select::make('service_ids')
+                            ->label('Dịch vụ khách quan tâm')
+                            ->multiple()
+                            ->options(Service::pluck('name', 'id'))
                             ->searchable()
-                            ->preload(),
+                            ->preload()
+                            ->columnSpanFull(),
+                            
                         DateTimePicker::make('booking_date')
-                            ->label('Ngày & Giờ hẹn')
+                            ->label('Ngày & Giờ hẹn dự kiến')
                             ->native(false),
+                            
                         Textarea::make('message')
-                            ->label('Lời nhắn / Yêu cầu')
+                            ->label('Lời nhắn / Yêu cầu từ khách')
                             ->columnSpanFull(),
                     ])->columns(2),
 
@@ -87,12 +92,19 @@ class BookingResource extends Resource
                         Textarea::make('notes')
                             ->label('Ghi chú của Admin (Khách không thấy)')
                             ->columnSpanFull(),
+                        Forms\Components\TextInput::make('total_amount')
+                            ->label('Tổng tiền hóa đơn (VNĐ)')
+                            ->numeric()
+                            ->default(0)
+                            ->required(),
                     ]),
-                Section::make('Danh sách Dịch vụ & Lịch trình')
+                    
+                Section::make('Lịch trình Chi tiết (Sau khi tư vấn)')
+                    ->description('Thêm chi tiết lịch trình các ngày và chi phí thực tế vào đây để in hóa đơn.')
                     ->schema([
                         Repeater::make('items')
                             ->relationship()
-                            ->hiddenLabel() // Ẩn label gốc của Repeater đi cho đỡ lặp chữ
+                            ->hiddenLabel()
                             ->addActionLabel('Thêm lịch trình / dịch vụ')
                             ->schema([
                                 Select::make('service_name')
@@ -103,7 +115,6 @@ class BookingResource extends Resource
                                     ->afterStateUpdated(function ($state, callable $set) {
                                         $service = Service::where('name', $state)->first();
                                         if ($service) {
-                                            // Lọc bỏ chữ (VD: "VNĐ", dấu phẩy), chỉ lấy số từ price_text để điền vào ô Đơn giá
                                             $priceNumber = preg_replace('/[^0-9]/', '', $service->price_text);
                                             $set('price', $priceNumber ?: 0); 
                                         }
@@ -133,22 +144,53 @@ class BookingResource extends Resource
                 TextColumn::make('phone')
                     ->label('SĐT')
                     ->searchable()
-                    ->copyable(), // Click vào là copy luôn SĐT
-                TextColumn::make('service.name')
-                    ->label('Dịch vụ')
-                    ->sortable(),
+                    ->copyable(),
+                
+                \Filament\Tables\Columns\TextColumn::make('service_ids')
+                    ->label('Dịch vụ yêu cầu')
+                    ->default('Chưa chọn')
+                    ->formatStateUsing(function ($state) {
+                        if (empty($state)) return null;
+
+                        $cleanString = str_replace(['\\', '"', '[', ']'], '', is_array($state) ? implode(',', $state) : $state);
+                        $ids = array_filter(array_map('trim', explode(',', $cleanString)));
+
+                        if (empty($ids)) return null;
+
+                        // Chỉ truy vấn DB 1 lần duy nhất
+                        static $allServices = null;
+                        if ($allServices === null) {
+                            $allServices = \App\Models\Service::pluck('name', 'id')->toArray(); 
+                        }
+
+                        $names = [];
+                        foreach ($ids as $id) {
+                            if (isset($allServices[$id])) {
+                                $names[] = $allServices[$id];
+                            }
+                        }
+                        
+                        // Trả về 1 chuỗi cách nhau bằng dấu phẩy
+                        return empty($names) ? null : implode(',', $names); 
+                    })
+                    ->badge() 
+                    ->color('info')
+                    ->separator(',') // Filament sẽ tự động đọc dấu phẩy và tách thành nhiều thẻ màu
+                    ->wrap(),
+                // --------------------------------------------------
+                    
                 TextColumn::make('booking_date')
-                    ->label('Thời gian hẹn')
-                    ->dateTime('d/m/Y H:i') // Chữ H:i sẽ hiển thị thêm giờ:phút
+                    ->label('Dự kiến')
+                    ->dateTime('d/m/Y')
                     ->sortable(),
                 TextColumn::make('status')
                     ->label('Trạng thái')
-                    ->badge() // Biến thành dạng Label màu sắc
+                    ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'pending' => 'warning',   // Màu vàng
-                        'confirmed' => 'info',    // Màu xanh dương
-                        'completed' => 'success', // Màu xanh lá
-                        'canceled' => 'danger',   // Màu đỏ
+                        'pending' => 'warning',
+                        'confirmed' => 'info',
+                        'completed' => 'success',
+                        'canceled' => 'danger',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
@@ -164,14 +206,12 @@ class BookingResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->defaultSort('booking_date', 'asc') 
-            
+            ->defaultSort('created_at', 'desc')
             ->filters([
-                // 2. THÊM ĐOẠN NÀY: Tạo bộ lọc nhanh theo Trạng thái
                 SelectFilter::make('status')
                     ->label('Lọc trạng thái')
                     ->options([
-                        'pending' => 'Chờ xử lý (Mới)',
+                        'pending' => 'Chờ xử lý',
                         'confirmed' => 'Đã xác nhận',
                         'completed' => 'Đã hoàn thành',
                         'canceled' => 'Đã hủy',
@@ -195,9 +235,7 @@ class BookingResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array

@@ -33,10 +33,10 @@ class CategoryResource extends Resource
                         TextInput::make('name')
                             ->label('Tên danh mục')
                             ->required()
-                            ->live(onBlur: true) // Lắng nghe sự thay đổi khi rời ô nhập liệu
+                            ->live(onBlur: true)
                             ->afterStateUpdated(fn (string $operation, $state, Forms\Set $set) => 
                                 $operation === 'create' ? $set('slug', Str::slug($state)) : null
-                            ), // Tự động tạo slug khi tạo mới
+                            ),
                         
                         TextInput::make('slug')
                             ->label('Đường dẫn (Slug)')
@@ -46,11 +46,7 @@ class CategoryResource extends Resource
 
                         Select::make('type')
                             ->label('Loại danh mục')
-                            ->options([
-                                'service' => 'Dùng cho Dịch vụ',
-                                'portfolio' => 'Dùng cho Portfolio (Ảnh)',
-                                'post' => 'Dùng cho Tạp chí (Bài viết)',
-                            ])
+                            ->options(Category::getTypes()) // Gọi mảng từ Model
                             ->required()
                             ->native(false),
 
@@ -73,19 +69,15 @@ class CategoryResource extends Resource
                 
                 TextColumn::make('type')
                     ->label('Phân loại')
-                    ->badge() // Biến thành dạng nhãn màu
+                    ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'service' => 'success',
-                        'portfolio' => 'info',
-                        'post' => 'warning',
+                        Category::TYPE_SERVICE => 'success',
+                        Category::TYPE_PORTFOLIO => 'info',
+                        Category::TYPE_POST => 'warning',
                         default => 'gray',
                     })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'service' => 'Dịch vụ',
-                        'portfolio' => 'Portfolio',
-                        'post' => 'Tạp chí',
-                        default => $state,
-                    }),
+                    // Lấy text hiển thị từ mảng getTypes() thay vì fix cứng
+                    ->formatStateUsing(fn (string $state): string => Category::getTypes()[$state] ?? $state),
 
                 TextColumn::make('order')
                     ->label('Thứ tự')
@@ -96,15 +88,11 @@ class CategoryResource extends Resource
                     ->dateTime('d/m/Y')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->defaultSort('type') // Sắp xếp theo loại cho dễ nhìn
+            ->defaultSort('type')
             ->filters([
                 Tables\Filters\SelectFilter::make('type')
                     ->label('Lọc theo loại')
-                    ->options([
-                        'service' => 'Dịch vụ',
-                        'portfolio' => 'Portfolio',
-                        'post' => 'Tạp chí',
-                    ]),
+                    ->options(Category::getTypes()), // Gọi mảng từ Model
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

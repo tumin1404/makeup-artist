@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Bộ Sưu Tập | Luyện Thị Thảo Makeup Artist')
+@section('title', 'Bộ Sưu Tập | ' . ($settings['site_name'] ?? ''))
 
 @php
     $getImg = fn($key, $default) => empty($settings[$key]) ? $default : (str_starts_with($settings[$key], 'http') ? $settings[$key] : asset('storage/' . $settings[$key]));
@@ -37,16 +37,20 @@
     <section class="py-12 px-6 max-w-7xl mx-auto" data-aos="fade-up">
         <div class="flex flex-wrap justify-center gap-4 md:gap-8 border-b border-dark/10 pb-6">
             <button class="filter-btn active bg-dark text-white px-6 py-2 rounded-full text-sm uppercase shadow-md" data-filter="all">Tất cả</button>
-            <button class="filter-btn text-dark hover:text-gold hover:bg-white px-6 py-2 rounded-full text-sm uppercase transition-all" data-filter="bride">Cô Dâu</button>
-            <button class="filter-btn text-dark hover:text-gold hover:bg-white px-6 py-2 rounded-full text-sm uppercase transition-all" data-filter="event">Sự Kiện</button>
-            <button class="filter-btn text-dark hover:text-gold hover:bg-white px-6 py-2 rounded-full text-sm uppercase transition-all" data-filter="personal">Cá Nhân / Kỷ Yếu</button>
+            
+            @foreach($portfolioCategories as $category)
+                <button class="filter-btn text-dark hover:text-gold hover:bg-white px-6 py-2 rounded-full text-sm uppercase transition-all" data-filter="{{ $category->slug }}">
+                    {{ $category->name }}
+                </button>
+            @endforeach
         </div>
     </section>
 
     <section class="pb-32 px-6 max-w-7xl mx-auto min-h-screen">
         <div class="masonry-grid" id="gallery-container">
             @foreach($portfolios as $item)
-                <div class="masonry-item opacity-100" data-category="{{ $item->category }}" data-aos="fade-up">
+                {{-- Thay đổi 1: Lấy slug của danh mục làm data-category để phục vụ chức năng lọc ảnh (nếu có) --}}
+                <div class="masonry-item opacity-100" data-category="{{ $item->category->slug ?? 'all' }}" data-aos="fade-up">
                     <div class="group block relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl bg-gray-100">
                         @if($item->type === 'image')
                             <a href="{{ asset('storage/' . $item->file_path) }}" class="glightbox">
@@ -60,9 +64,10 @@
 
                         <div class="gallery-overlay absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-6 pointer-events-none">
                             <span class="text-gold text-[10px] tracking-widest uppercase mb-1">
-                                {{ match($item->category) { 'bride' => 'Wedding', 'event' => 'Event', 'personal' => 'Portrait', default => 'Gallery' } }}
+                                {{-- Thay đổi 2: Hiển thị tên danh mục trực tiếp từ Database --}}
+                                {{ $item->category->name ?? 'Gallery' }}
                             </span>
-                            <h3 class="text-white font-serif text-xl">{{ $item->title ?? 'Luyện Thị Thảo' }}</h3>
+                            <h3 class="text-white font-serif text-xl">{{ $item->title ?? ($settings['site_name'] ?? '') }}</h3>
                         </div>
                     </div>
                 </div>

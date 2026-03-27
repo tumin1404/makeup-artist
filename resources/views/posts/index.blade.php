@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Tạp Chí Làm Đẹp | Luyện Thị Thảo Makeup Artist')
+@section('title', 'Tạp Chí Làm Đẹp | ' . ($settings['site_name'] ?? ''))
 
 @php
     $getImg = fn($key, $default) => empty($settings[$key]) ? $default : (str_starts_with($settings[$key], 'http') ? $settings[$key] : asset('storage/' . $settings[$key]));
@@ -48,10 +48,12 @@
 
     <section class="pt-16 pb-8 px-6 max-w-7xl mx-auto border-b border-dark/10" data-aos="fade-up">
         <div class="flex flex-wrap justify-center gap-6 md:gap-12 text-sm tracking-widest uppercase font-medium">
-            <a href="{{ route('posts.index') }}" class="{{ !request('category') ? 'text-dark border-b-2 border-dark' : 'text-gray-400 hover:text-gold' }} pb-1 transition-colors">Tất cả bài viết</a>
+            <a href="{{ route('posts.index') }}" class="{{ !request('category') ? 'text-dark border-b-2 border-dark' : 'text-gray-400 hover:text-gold' }} pb-1 transition-colors">
+                Tất cả bài viết
+            </a>
             @foreach($categories as $category)
                 <a href="{{ route('posts.index', ['category' => $category->slug]) }}" 
-                   class="{{ request('category') == $category->slug ? 'text-dark border-b-2 border-dark' : 'text-gray-400 hover:text-gold' }} transition-colors">
+                class="{{ request('category') == $category->slug ? 'text-dark border-b-2 border-dark' : 'text-gray-400 hover:text-gold' }} pb-1 transition-colors">
                     {{ $category->name }}
                 </a>
             @endforeach
@@ -60,23 +62,26 @@
 
     @if($featuredPost)
     <section class="py-20 px-6 max-w-7xl mx-auto">
-        <div class="flex flex-col md:flex-row gap-12 items-center article-card cursor-pointer group" data-aos="fade-up">
+        <div class="flex flex-col md:flex-row gap-12 items-center article-card group" data-aos="fade-up">
             <div class="md:w-3/5 overflow-hidden rounded-2xl shadow-md">
-                <a href="{{ route('posts.show', $featuredPost->slug) }}">
-                    <img src="{{ asset('storage/' . $featuredPost->thumbnail) }}" alt="{{ $featuredPost->title }}" class="w-full aspect-video md:aspect-[4/3] object-cover">
+                <a href="{{ route('posts.show', $featuredPost->slug) }}" class="block overflow-hidden">
+                    <img src="{{ asset('storage/' . $featuredPost->thumbnail) }}" alt="{{ $featuredPost->title }}" class="w-full aspect-video md:aspect-[4/3] object-cover transform group-hover:scale-105 transition-transform duration-700">
                 </a>
             </div>
             <div class="md:w-2/5 md:pr-8">
                 <span class="text-gold text-xs tracking-widest uppercase mb-4 block font-bold">
-                    {{ $featuredPost->category->name ?? 'Xu hướng' }} • Mới nhất
+                    {{ $featuredPost->category->name ?? 'Tạp chí' }} • Mới nhất
                 </span>
-                <h2 class="text-4xl md:text-5xl font-serif text-dark mb-6 leading-tight group-hover:text-gold transition-colors">
+                <h2 class="text-4xl md:text-5xl font-serif text-dark mb-6 leading-tight group-hover:text-gold transition-colors duration-300">
                     <a href="{{ route('posts.show', $featuredPost->slug) }}">{{ $featuredPost->title }}</a>
                 </h2>
-                <p class="font-light text-gray-600 mb-8 leading-relaxed">{{ Str::limit($featuredPost->excerpt, 180) }}</p>
-                <a href="{{ route('posts.show', $featuredPost->slug) }}" class="read-more-link text-dark font-medium uppercase text-xs tracking-widest flex items-center w-max">
+                <p class="font-light text-gray-600 mb-8 leading-relaxed">
+                    {{-- Lấy excerpt, nếu trống thì lấy content cắt bớt thẻ HTML --}}
+                    {{ Str::limit($featuredPost->excerpt ?? strip_tags($featuredPost->content ?? ''), 180) }}
+                </p>
+                <a href="{{ route('posts.show', $featuredPost->slug) }}" class="text-dark font-medium uppercase text-xs tracking-widest flex items-center w-max hover:text-gold transition-colors">
                     Đọc toàn bộ bài viết 
-                    <i class="fas fa-long-arrow-alt-right ml-2 arrow-icon transition-transform"></i>
+                    <i class="fas fa-long-arrow-alt-right ml-2 transition-transform group-hover:translate-x-2"></i>
                 </a>
             </div>
         </div>

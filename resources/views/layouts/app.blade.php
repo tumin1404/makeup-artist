@@ -3,9 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Luyện Thị Thảo | Makeup Artist Chuyên Nghiệp')</title>
+    <title>{{ $settings['site_name'] ?? 'Trang chủ' }}</title>
     
-    <meta name="description" content="Luyện Thị Thảo - Makeup Artist chuyên trang điểm cô dâu, sự kiện, nghệ sĩ tại Hà Nội và Hưng Yên.">
+    <meta name="description" content="{{ $settings['site_description'] ?? 'Makeup Artist chuyên trang điểm cô dâu, sự kiện, nghệ sĩ tại Hà Nội và Hưng Yên.' }}">
+    <meta property="og:image" content="{{ !empty($settings['site_meta_image']) ? asset('storage/' . $settings['site_meta_image']) : asset('images/default-share.jpg') }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    @if(!empty($settings['site_favicon']))
+        <link rel="icon" href="{{ asset('storage/' . $settings['site_favicon']) }}">
+        <link rel="shortcut icon" href="{{ asset('storage/' . $settings['site_favicon']) }}">
+    @endif
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

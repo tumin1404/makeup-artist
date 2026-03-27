@@ -18,6 +18,8 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Navigation\NavigationGroup;
+use Filament\View\PanelsRenderHook;
+use Illuminate\Support\Facades\Blade;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -28,11 +30,27 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            // THÊM 3 DÒNG NÀY (Nhớ sửa lại đường dẫn file cho đúng với thư mục public của bạn)
+            ->brandLogo(function () {
+                // Lưu ý: Thay 'Setting', 'key', 'value' bằng đúng tên Model và tên cột trong Database của bạn
+                $logo = \App\Models\Setting::where('key', 'site_logo')->value('value');
+                return $logo ? asset('storage/' . $logo) : null;
+            })
+            ->brandLogoHeight('3rem') // Chỉnh chiều cao logo cho vừa mắt
+            ->favicon(function () {
+                $favicon = \App\Models\Setting::where('key', 'site_favicon')->value('value');
+                return $favicon ? asset('storage/' . $favicon) : null;
+            })
             ->passwordReset()
             ->emailVerification()
             ->profile()
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn (): string => Blade::render('<style>.filepond--root video { width: 100% !important; height: 100% !important; object-fit: contain !important; border-radius: 0.5rem; }</style>')
+            )
             ->navigationGroups([
                 NavigationGroup::make()->label('Quản lý Website'),
+                NavigationGroup::make()->label('Quản lý Tài chính'),
                 NavigationGroup::make()->label('Hệ thống'),
             ])
             ->colors([
@@ -49,8 +67,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
+                
             ])
             ->middleware([
                 EncryptCookies::class,

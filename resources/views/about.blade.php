@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Giới Thiệu | Luyện Thị Thảo Makeup Artist')
+@section('title', 'Giới Thiệu | ' . ($settings['site_name'] ?? ''))
 
 @php
     $getImg = fn($key, $default) => empty($settings[$key]) ? $default : (str_starts_with($settings[$key], 'http') ? $settings[$key] : asset('storage/' . $settings[$key]));
@@ -37,16 +37,22 @@
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-20">
             <div class="w-full md:w-5/12" data-aos="fade-right">
                 <div class="relative about-image-shadow rounded-2xl overflow-hidden">
-                    <img src="{{ $getImg('about_me_image', 'https://images.unsplash.com/photo-1595959183082-7b570b7e08e2') }}" class="w-full aspect-[4/5] object-cover">
+                    {{-- Lưu ý: Kiểm tra lại hàm $getImg hoặc sử dụng asset('storage/' . $settings['about_me_image']) nếu dùng bảng setting --}}
+                    <img src="{{ !empty($settings['about_me_image']) ? asset('storage/' . $settings['about_me_image']) : 'https://images.unsplash.com/photo-1595959183082-7b570b7e08e2' }}" class="w-full aspect-[4/5] object-cover">
                 </div>
             </div>
             <div class="w-full md:w-7/12" data-aos="fade-left">
                 <span class="text-gold text-xs tracking-[0.4em] uppercase mb-4 block font-bold">Makeup Artist</span>
-                <h2 class="text-4xl md:text-5xl font-serif text-dark mb-8 leading-tight">{!! $settings['about_me_title'] ?? 'Xin chào, tôi là <br><span class="italic">Luyện Thị Thảo</span>' !!}</h2>
+                <h2 class="text-4xl md:text-5xl font-serif text-dark mb-8 leading-tight">
+                    {!! $settings['about_me_title'] ?? 'Xin chào, tôi là <br><span class="italic">' . ($settings['site_name'] ?? 'Artist') . '</span>' !!}
+                </h2>
                 <div class="space-y-6 text-gray-700 leading-relaxed font-light text-lg">
-                    {!! nl2br(e($settings['about_me_content'] ?? "Hành trình đến với nghệ thuật trang điểm của tôi bắt nguồn từ niềm đam mê mãnh liệt với cái đẹp và khát khao đánh thức sự tự tin trong mỗi người phụ nữ.\n\nHoạt động chuyên nghiệp tại Hà Nội và Hưng Yên, tôi theo đuổi phong cách Nude Luxury – tinh giản, sang trọng nhưng đầy chiều sâu.")) !!}
+                    {!! nl2br(e($settings['about_me_content'] ?? "Hành trình đến với nghệ thuật trang điểm của tôi bắt nguồn từ niềm đam mê mãnh liệt với cái đẹp và khát khao đánh thức sự tự tin trong mỗi người phụ nữ.\n\nHoạt động chuyên nghiệp, tôi theo đuổi phong cách Nude Luxury – tinh giản, sang trọng nhưng đầy chiều sâu.")) !!}
                 </div>
-                <img src="{{ $getImg('about_me_signature', 'https://images.unsplash.com/photo-1596462502278-27bfdc403348') }}" class="w-32 mt-10 opacity-60 mix-blend-multiply">
+                
+                @if(!empty($settings['about_me_signature']))
+                    <img src="{{ asset('storage/' . $settings['about_me_signature']) }}" class="w-48 mt-10 opacity-80 mix-blend-multiply">
+                @endif
             </div>
         </div>
     </section>

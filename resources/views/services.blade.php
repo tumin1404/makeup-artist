@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Dịch Vụ & Báo Giá | Luyện Thị Thảo Makeup Artist')
+@section('title', 'Dịch Vụ & Báo Giá | ' . ($settings['site_name'] ?? ''))
 
 @php
     $getImg = fn($key, $default) => empty($settings[$key]) ? $default : (str_starts_with($settings[$key], 'http') ? $settings[$key] : asset('storage/' . $settings[$key]));
@@ -70,34 +70,73 @@
 
         <div class="space-y-6">
             @forelse($services as $index => $service)
-                <div class="service-row p-8 rounded-2xl flex flex-col md:flex-row gap-8 items-start md:items-center" data-aos="fade-up" data-aos-delay="{{ $index * 100 }}">
+                <div class="service-row p-8 rounded-2xl flex flex-col md:flex-row gap-8 items-start md:items-center bg-white/50 border border-white/20 transition-all duration-300 hover:shadow-xl" 
+                    data-aos="fade-up" 
+                    data-aos-delay="{{ $index * 100 }}">
+                    
                     <div class="md:w-1/3">
-                        <h3 class="text-2xl font-serif text-dark mb-2">{{ $service->name }}</h3>
+                        <div class="flex items-center gap-3 mb-2">
+                            <h3 class="text-2xl font-serif text-dark">{{ $service->name }}</h3>
+                            {{-- Hiển thị Badge Phân cấp --}}
+                            @if($service->service_level)
+                                <span class="text-[10px] px-2 py-0.5 rounded-full border {{ $service->service_level === 'Premium' ? 'border-gold text-gold' : 'border-gray-400 text-gray-500' }} uppercase tracking-widest">
+                                    {{ $service->service_level }}
+                                </span>
+                            @endif
+                        </div>
                         <p class="text-gold font-medium tracking-widest uppercase text-sm">{{ $service->price_text }}</p>
                     </div>
+
                     <div class="md:w-2/3">
-                        <p class="font-light text-gray-700 leading-relaxed mb-4">{{ $service->description }}</p>
+                        @if($service->description)
+                            <p class="font-light text-gray-700 leading-relaxed mb-4">{{ $service->description }}</p>
+                        @endif
                         
-                        @php $features = json_decode($service->features, true); @endphp
-                        @if(!empty($features) && is_array($features))
-                            <ul class="text-sm font-light text-gray-500 space-y-2">
-                                @foreach($features as $feature)
-                                    <li><i class="fas fa-check text-gold mr-2 text-xs"></i> {{ $feature }}</li>
+                        {{-- features đã được cast sang array ở Model nên không cần json_decode nữa --}}
+                        @if(!empty($service->features) && is_array($service->features))
+                            <ul class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm font-light text-gray-500">
+                                @foreach($service->features as $feature)
+                                    <li class="flex items-center">
+                                        <i class="fas fa-check text-gold mr-3 text-[10px]"></i> 
+                                        {{ $feature }}
+                                    </li>
                                 @endforeach
                             </ul>
                         @endif
                     </div>
                 </div>
             @empty
-                <div class="text-center text-gray-500 py-8">
-                    Chưa có dịch vụ nào được cập nhật.
+                <div class="text-center text-gray-500 py-20 border border-dashed border-gray-200 rounded-2xl">
+                    <p>Chưa có dịch vụ nào được cập nhật.</p>
                 </div>
             @endforelse
         </div>
-        
-        <div class="text-center mt-12" data-aos="fade-up">
-            <p class="text-xs italic text-gray-400">* Báo giá trên có thể thay đổi tùy thuộc vào vị trí di chuyển và yêu cầu concept cụ thể.</p>
-        </div>
+
+        {{-- PHẦN LƯU Ý (SERVICE NOTES) TỪ ADMIN --}}
+        @if(!empty($settings['service_notes']))
+            <div class="mt-16 p-8 md:p-12 rounded-3xl bg-primary/50 border border-gold/10 relative overflow-hidden" data-aos="fade-up">
+                <div class="relative z-10">
+                    <h3 class="font-serif text-2xl mb-8 text-dark flex items-center gap-3">
+                        <span class="w-8 h-[1px] bg-gold"></span>
+                        Lưu ý quan trọng
+                    </h3>
+                    <div class="prose prose-sm max-w-none text-gray-600 leading-relaxed prose-li:marker:text-gold">
+                        {!! $settings['service_notes'] !!}
+                    </div>
+                </div>
+                {{-- Trang trí nhẹ góc khung --}}
+                <div class="absolute -right-10 -bottom-10 opacity-5">
+                    <i class="fas fa-spa text-9xl text-gold"></i>
+                </div>
+            </div>
+        @else
+            {{-- Dự phòng nếu Admin chưa nhập notes --}}
+            <div class="text-center mt-12" data-aos="fade-up">
+                <p class="text-[10px] tracking-widest uppercase text-gray-400">
+                    * Báo giá trên có thể thay đổi tùy thuộc vào vị trí và yêu cầu cụ thể.
+                </p>
+            </div>
+        @endif
     </section>
 
     <section class="py-32 px-6 bg-white">

@@ -10,7 +10,7 @@
 <body>
     <div class="container">
         <h2 style="color: #3e2f2f;">Xin chào, {{ $user->name }}!</h2>
-        <p style="color: #666; line-height: 1.6;">Tài khoản quản trị của bạn tại <strong>Luyện Thị Thảo Makeup</strong> vừa được tạo. Vui lòng nhấn nút bên dưới để xác thực email và kích hoạt tài khoản.</p>
+        <p style="color: #666; line-height: 1.6;">Tài khoản quản trị của bạn tại <strong>{{ $siteName }}</strong> vừa được tạo. Vui lòng nhấn nút bên dưới để xác thực email và kích hoạt tài khoản.</p>
         
         <a href="{{ $url }}" class="btn">Kích Hoạt Tài Khoản</a>
         

@@ -21,9 +21,10 @@ class HomeController extends Controller
             ->take(1)
             ->get();
 
-        // 2. Lấy 3 dịch vụ nổi bật để hiển thị ở khối "Dịch vụ chuyên nghiệp"
-        $services = Service::where('is_active', true)
-            ->take(3)
+        // Lấy tối đa 3 dịch vụ được đánh dấu "is_featured"
+        $services = \App\Models\Service::where('is_active', true)
+            ->where('is_featured', true) 
+            ->take(3) // Giới hạn 3 để khớp với giao diện grid 3 cột
             ->get();
 
         // 3. Lấy 3 bài viết mới nhất cho phần "Tạp chí làm đẹp"

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Luyện Thị Thảo | Makeup Artist Chuyên Nghiệp')
+@section('title', $settings['site_name'] ?? 'Trang Chủ')
 
 @php
     $getImg = fn($key, $default) => empty($settings[$key]) ? $default : (str_starts_with($settings[$key], 'http') ? $settings[$key] : asset('storage/' . $settings[$key]));
@@ -13,8 +13,8 @@
             @foreach($banners as $banner)
                 <div class="absolute inset-0 w-full h-full">
                     <img src="{{ asset('storage/' . $banner->image_path) }}" 
-                         alt="{{ $banner->title }}" 
-                         class="w-full h-full object-cover scale-105 animate-[pulse_20s_ease-in-out_infinite_alternate]">
+                        alt="{{ $banner->title }}" 
+                        class="w-full h-full object-cover scale-105 animate-[pulse_20s_ease-in-out_infinite_alternate]">
                     <div class="absolute inset-0 bg-black/40"></div>
                 </div>
                 <div class="relative z-10 text-center text-white px-6 max-w-4xl" data-aos="fade-up">
@@ -28,14 +28,22 @@
                 </div>
             @endforeach
         @else
+            {{-- Phần hiển thị mặc định khi không có dữ liệu Banner --}}
             <div class="absolute inset-0 w-full h-full">
                 <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-black/40"></div>
             </div>
             <div class="relative z-10 text-center text-white px-6 max-w-4xl" data-aos="fade-up">
-                <span class="block text-sm font-light tracking-[0.3em] uppercase mb-4 text-gold">{{ $settings['home_hero_subtitle'] ?? 'High-End Experience' }}</span>
-                <h1 class="text-5xl md:text-7xl font-serif font-bold mb-6 leading-tight">Luyện Thị Thảo <br> Makeup Artist</h1>
-                <a href="{{ url('/booking') }}" class="inline-block bg-gold text-white px-10 py-4 rounded-full text-sm uppercase tracking-wider hover:bg-white hover:text-dark transition-all duration-500">Đặt lịch ngay</a>
+                <span class="block text-sm font-light tracking-[0.3em] uppercase mb-4 text-gold">
+                    {{ $settings['home_hero_subtitle'] ?? 'High-End Experience' }}
+                </span>
+                {{-- Thay thế tên cứng bằng site_name --}}
+                <h1 class="text-5xl md:text-7xl font-serif font-bold mb-6 leading-tight">
+                    {{ $settings['site_name'] ?? '' }}
+                </h1>
+                <a href="{{ url('/booking') }}" class="inline-block bg-gold text-white px-10 py-4 rounded-full text-sm uppercase tracking-wider hover:bg-white hover:text-dark transition-all duration-500">
+                    Đặt lịch ngay
+                </a>
             </div>
         @endif
     </section>
@@ -60,8 +68,12 @@
                     <div class="w-12 h-[1px] bg-gold mx-auto mb-6 group-hover:w-20 transition-all"></div>
                     <p class="font-bold text-gold mb-4 text-xl tracking-widest">{{ $service->price_text }}</p>
                     <div class="text-sm font-light opacity-80 leading-relaxed">
-                        @php $features = json_decode($service->features); @endphp
-                        @if($features)
+                        @php 
+                            // Nếu là chuỗi thì giải mã, nếu đã là mảng thì giữ nguyên
+                            $features = is_string($service->features) ? json_decode($service->features, true) : $service->features; 
+                        @endphp
+                        
+                        @if(!empty($features) && is_array($features))
                             <ul class="space-y-2">
                                 @foreach($features as $feature)
                                     <li>{{ $feature }}</li>
