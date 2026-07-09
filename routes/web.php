@@ -57,3 +57,7 @@ Route::get('/booking/{booking}/invoice', function (Booking $booking) {
 
 // Lưu ý: Filament tự động tạo các route như /admin/posts, /admin/services...
 // Bạn chỉ cần đảm bảo các Resource đã được đăng ký trong Filament.
+
+Route::get('/email/verify/{id}/{hash}', function () {
+    return 'Verify email';
+})->name('verification.verify');
