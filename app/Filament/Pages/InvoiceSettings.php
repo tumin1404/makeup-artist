@@ -365,11 +365,43 @@ class InvoiceSettings extends Page implements HasForms
     }
 
     /**
-     * Bật/Tắt một khối trực tiếp từ danh sách kéo thả
+     * Đổi căn lề Trái / Giữa / Phải của một khối
+     */
+    public function setElementAlign(string $blockId, string $align): void
+    {
+        if (!isset($this->data['elements_layout'])) {
+            $this->data['elements_layout'] = InvoiceConfigService::getCurrentConfig()['elements_layout'] ?? [];
+        }
+        $this->data['elements_layout'][$blockId]['align'] = $align;
+    }
+
+    /**
+     * Đổi độ rộng Chiếm Full / Nửa cột của một khối
+     */
+    public function setElementWidth(string $blockId, string $width): void
+    {
+        if (!isset($this->data['elements_layout'])) {
+            $this->data['elements_layout'] = InvoiceConfigService::getCurrentConfig()['elements_layout'] ?? [];
+        }
+        $this->data['elements_layout'][$blockId]['width'] = $width;
+    }
+
+    /**
+     * Đổi kích cỡ To / Nhỏ của một khối
+     */
+    public function setElementSize(string $blockId, string $size): void
+    {
+        if (!isset($this->data['elements_layout'])) {
+            $this->data['elements_layout'] = InvoiceConfigService::getCurrentConfig()['elements_layout'] ?? [];
+        }
+        $this->data['elements_layout'][$blockId]['size'] = $size;
+    }
+
+    /**
+     * Bật/Tắt một khối trực tiếp từ bản xem trước
      */
     public function toggleBlock(string $blockId, bool $status): void
     {
-        // Có thể map blockId sang trường dữ liệu tương ứng
         $map = [
             'seller_header' => 'show_seller_name',
             'invoice_meta' => 'show_invoice_number',

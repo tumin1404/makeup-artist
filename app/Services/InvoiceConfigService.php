@@ -9,7 +9,7 @@ class InvoiceConfigService
     const SETTING_KEY = 'invoice_custom_config';
 
     /**
-     * Danh sách 9 khối giao diện có thể kéo thả và bật/tắt
+     * Danh sách các khối giao diện có thể kéo thả, căn chỉnh vị trí và kích thước
      */
     public static function getAvailableBlocks(): array
     {
@@ -17,65 +17,83 @@ class InvoiceConfigService
             'seller_header' => [
                 'id' => 'seller_header',
                 'name' => '1. Thông tin Đơn vị Bán hàng & Logo',
-                'description' => 'Hiển thị Logo, Tên Studio/Công ty, Mã số thuế, Địa chỉ, Hotline, STK',
+                'description' => 'Logo, Tên Studio/Công ty, MST, Địa chỉ, Hotline, STK',
                 'icon' => 'heroicon-o-building-storefront',
-                'enabled' => true,
+                'default_align' => 'between',
+                'default_width' => 'full',
+                'default_size' => 'md',
             ],
             'invoice_meta' => [
                 'id' => 'invoice_meta',
-                'name' => '2. Tiêu đề Hóa đơn & Mã số pháp lý',
-                'description' => 'Tiêu đề hóa đơn, Số hóa đơn, Ký hiệu mẫu số, Ngày tháng lập, Mã CQT',
+                'name' => '2. Tiêu đề Hóa đơn & Pháp lý',
+                'description' => 'Tiêu đề hóa đơn, Số HĐ, Ký hiệu mẫu số, Ngày lập, Mã CQT',
                 'icon' => 'heroicon-o-document-text',
-                'enabled' => true,
+                'default_align' => 'center',
+                'default_width' => 'full',
+                'default_size' => 'md',
             ],
             'buyer_info' => [
                 'id' => 'buyer_info',
                 'name' => '3. Thông tin Khách hàng (Bên mua)',
-                'description' => 'Tên khách hàng, Tên công ty, MST khách, SĐT, Địa chỉ, Hình thức thanh toán',
+                'description' => 'Tên khách hàng, Tên công ty, MST khách, SĐT, Địa chỉ, Hình thức TT',
                 'icon' => 'heroicon-o-user',
-                'enabled' => true,
+                'default_align' => 'left',
+                'default_width' => 'full',
+                'default_size' => 'md',
             ],
             'items_table' => [
                 'id' => 'items_table',
-                'name' => '4. Bảng Kê Chi Tiết Dịch vụ / Hàng hóa',
-                'description' => 'STT, Tên dịch vụ/hàng, Đơn vị tính, Số lượng, Đơn giá, Chiết khấu, Thuế, Thành tiền',
+                'name' => '4. Bảng Kê Dịch vụ / Sản phẩm',
+                'description' => 'STT, Tên dịch vụ/hàng, ĐVT, SL, Đơn giá, Chiết khấu, Thuế, Thành tiền',
                 'icon' => 'heroicon-o-table-cells',
-                'enabled' => true,
+                'default_align' => 'left',
+                'default_width' => 'full',
+                'default_size' => 'md',
             ],
             'summary_totals' => [
                 'id' => 'summary_totals',
                 'name' => '5. Tổng Tiền, Thuế VAT & Tiền bằng chữ',
                 'description' => 'Cộng tiền hàng, Thuế GTGT, Chiết khấu, Đặt cọc, Còn lại, Đọc số tiền bằng chữ',
                 'icon' => 'heroicon-o-calculator',
-                'enabled' => true,
+                'default_align' => 'right',
+                'default_width' => 'half',
+                'default_size' => 'md',
             ],
             'vietqr_banking' => [
                 'id' => 'vietqr_banking',
-                'name' => '6. Thanh toán VietQR & Thông tin Chuyển khoản',
-                'description' => 'Mã VietQR động tự điền số tiền + cú pháp CK và thông tin tài khoản ngân hàng',
+                'name' => '6. Thanh toán VietQR & Ngân hàng',
+                'description' => 'Mã VietQR động tự nạp số tiền + cú pháp CK và thông tin tài khoản',
                 'icon' => 'heroicon-o-qr-code',
-                'enabled' => true,
+                'default_align' => 'left',
+                'default_width' => 'half',
+                'default_size' => 'md',
             ],
             'notes_terms' => [
                 'id' => 'notes_terms',
                 'name' => '7. Ghi chú, Lưu ý & Quy định đổi trả/bảo hành',
                 'description' => 'Lời dặn dò khách hàng, chính sách đặt cọc, đổi trả hoặc điều kiện xuất VAT',
                 'icon' => 'heroicon-o-chat-bubble-left-ellipsis',
-                'enabled' => true,
+                'default_align' => 'left',
+                'default_width' => 'full',
+                'default_size' => 'md',
             ],
             'signatures' => [
                 'id' => 'signatures',
                 'name' => '8. Khu vực Chữ Ký & Dấu Chứng Thực',
-                'description' => 'Chữ ký 2 bên (Khách - Người lập), 5 bên (Kho), hoặc Con dấu điện tử Signature Valid',
+                'description' => 'Chữ ký 2 bên (Khách - Người lập), 5 bên (Kho), hoặc Dấu điện tử Signature Valid',
                 'icon' => 'heroicon-o-pencil-square',
-                'enabled' => true,
+                'default_align' => 'center',
+                'default_width' => 'full',
+                'default_size' => 'md',
             ],
             'footer_lookup' => [
                 'id' => 'footer_lookup',
-                'name' => '9. Chân trang Tra cứu & Bản quyền phần mềm',
+                'name' => '9. Chân trang Tra cứu & Bản quyền',
                 'description' => 'Link tra cứu hóa đơn trực tuyến, mã bí mật, đơn vị cung cấp giải pháp',
                 'icon' => 'heroicon-o-globe-alt',
-                'enabled' => false,
+                'default_align' => 'center',
+                'default_width' => 'full',
+                'default_size' => 'md',
             ],
         ];
     }
@@ -94,7 +112,7 @@ class InvoiceConfigService
                 'description' => 'Tone màu Gold & Dark sang trọng, hiển thị lịch trình chi tiết, tích hợp mã VietQR quét chuyển khoản tức thì.',
                 'config' => [
                     'paper_size' => 'a4',
-                    'color_theme' => 'luxury', // luxury | classic | corporate | minimal
+                    'color_theme' => 'luxury',
                     'invoice_title' => 'PHIẾU DỊCH VỤ & THANH TOÁN',
                     'invoice_subtitle' => 'Makeup Artist & Beauty Studio',
                     'show_logo' => true,
@@ -130,16 +148,27 @@ class InvoiceConfigService
                     'show_notes' => true,
                     'notes_content' => "• Quý khách vui lòng kiểm tra diện mạo và phụ kiện trước khi rời studio.\n• Lịch hẹn trang điểm vui lòng có mặt đúng giờ để đảm bảo tiến độ.",
                     'footer_thank_you' => 'Cảm ơn quý khách đã tin tưởng và lựa chọn dịch vụ của chúng tôi!',
-                    'signature_type' => 'two_parties', // two_parties | five_parties | digital_stamp | none
+                    'signature_type' => 'two_parties',
                     'show_lookup_link' => false,
                     'lookup_url' => '',
+                    'elements_layout' => [
+                        'seller_header' => ['align' => 'between', 'width' => 'full', 'size' => 'md'],
+                        'invoice_meta' => ['align' => 'center', 'width' => 'full', 'size' => 'md'],
+                        'buyer_info' => ['align' => 'left', 'width' => 'full', 'size' => 'md'],
+                        'items_table' => ['align' => 'left', 'width' => 'full', 'size' => 'md'],
+                        'summary_totals' => ['align' => 'right', 'width' => 'half', 'size' => 'md'],
+                        'vietqr_banking' => ['align' => 'left', 'width' => 'half', 'size' => 'md'],
+                        'notes_terms' => ['align' => 'left', 'width' => 'full', 'size' => 'md'],
+                        'signatures' => ['align' => 'center', 'width' => 'full', 'size' => 'md'],
+                        'footer_lookup' => ['align' => 'center', 'width' => 'full', 'size' => 'md'],
+                    ],
                     'block_order' => [
                         'seller_header',
                         'invoice_meta',
                         'buyer_info',
                         'items_table',
-                        'summary_totals',
                         'vietqr_banking',
+                        'summary_totals',
                         'notes_terms',
                         'signatures',
                     ],
@@ -192,13 +221,24 @@ class InvoiceConfigService
                     'signature_type' => 'two_parties',
                     'show_lookup_link' => false,
                     'lookup_url' => '',
+                    'elements_layout' => [
+                        'seller_header' => ['align' => 'between', 'width' => 'full', 'size' => 'md'],
+                        'invoice_meta' => ['align' => 'center', 'width' => 'full', 'size' => 'md'],
+                        'buyer_info' => ['align' => 'left', 'width' => 'full', 'size' => 'md'],
+                        'items_table' => ['align' => 'left', 'width' => 'full', 'size' => 'md'],
+                        'summary_totals' => ['align' => 'right', 'width' => 'half', 'size' => 'md'],
+                        'vietqr_banking' => ['align' => 'left', 'width' => 'half', 'size' => 'md'],
+                        'notes_terms' => ['align' => 'left', 'width' => 'full', 'size' => 'md'],
+                        'signatures' => ['align' => 'center', 'width' => 'full', 'size' => 'md'],
+                        'footer_lookup' => ['align' => 'center', 'width' => 'full', 'size' => 'md'],
+                    ],
                     'block_order' => [
                         'seller_header',
                         'invoice_meta',
                         'buyer_info',
                         'items_table',
-                        'summary_totals',
                         'vietqr_banking',
+                        'summary_totals',
                         'notes_terms',
                         'signatures',
                     ],
@@ -251,6 +291,16 @@ class InvoiceConfigService
                     'signature_type' => 'digital_stamp',
                     'show_lookup_link' => true,
                     'lookup_url' => 'https://tracuu.hoadondientu.gdt.gov.vn',
+                    'elements_layout' => [
+                        'seller_header' => ['align' => 'between', 'width' => 'full', 'size' => 'md'],
+                        'invoice_meta' => ['align' => 'center', 'width' => 'full', 'size' => 'md'],
+                        'buyer_info' => ['align' => 'left', 'width' => 'full', 'size' => 'md'],
+                        'items_table' => ['align' => 'left', 'width' => 'full', 'size' => 'md'],
+                        'summary_totals' => ['align' => 'right', 'width' => 'full', 'size' => 'md'],
+                        'signatures' => ['align' => 'center', 'width' => 'full', 'size' => 'md'],
+                        'vietqr_banking' => ['align' => 'center', 'width' => 'full', 'size' => 'md'],
+                        'footer_lookup' => ['align' => 'center', 'width' => 'full', 'size' => 'md'],
+                    ],
                     'block_order' => [
                         'seller_header',
                         'invoice_meta',
@@ -310,6 +360,15 @@ class InvoiceConfigService
                     'signature_type' => 'five_parties',
                     'show_lookup_link' => false,
                     'lookup_url' => '',
+                    'elements_layout' => [
+                        'seller_header' => ['align' => 'between', 'width' => 'full', 'size' => 'md'],
+                        'invoice_meta' => ['align' => 'center', 'width' => 'full', 'size' => 'md'],
+                        'buyer_info' => ['align' => 'left', 'width' => 'full', 'size' => 'md'],
+                        'items_table' => ['align' => 'left', 'width' => 'full', 'size' => 'md'],
+                        'summary_totals' => ['align' => 'right', 'width' => 'full', 'size' => 'md'],
+                        'notes_terms' => ['align' => 'left', 'width' => 'full', 'size' => 'md'],
+                        'signatures' => ['align' => 'center', 'width' => 'full', 'size' => 'md'],
+                    ],
                     'block_order' => [
                         'seller_header',
                         'invoice_meta',
@@ -350,6 +409,6 @@ class InvoiceConfigService
      */
     public static function saveConfig(array $config): bool
     {
-        return Setting::set(self::SETTING_KEY, json_encode($config, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+        return Setting::set(self::SETTING_KEY, json_encode($config, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), 'banking', 'text', 'Cấu hình mẫu hóa đơn và kéo thả phần tử');
     }
 }
