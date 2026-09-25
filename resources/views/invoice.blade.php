@@ -39,22 +39,34 @@
 
     <div class="invoice-box" id="invoice-content">
         <div class="header">
-            <h1>HOÁ ĐƠN DỊCH VỤ MAKEUP</h1>
-            <p>Mã đơn: #{{ str_pad($booking->id, 5, '0', STR_PAD_LEFT) }}</p>
+            @if(!empty($settings['site_logo']))
+                <img src="{{ asset('storage/' . $settings['site_logo']) }}" alt="{{ $settings['site_name'] ?? 'Logo' }}" style="max-height: 60px; margin-bottom: 15px;">
+            @endif
+            <h1 style="margin: 0; font-size: 24px; text-transform: uppercase;">{{ $settings['site_name'] ?? 'HOÁ ĐƠN DỊCH VỤ' }}</h1>
+            <p style="margin: 5px 0 0; color: #666; font-size: 14px;">Mã hoá đơn: #{{ str_pad($booking->id, 5, '0', STR_PAD_LEFT) }}</p>
+            @if(!empty($settings['hotline']) || !empty($settings['address_main']) || !empty($settings['address']))
+                <p style="margin: 5px 0 0; color: #888; font-size: 12px;">
+                    {{ !empty($settings['hotline']) ? 'Hotline: ' . $settings['hotline'] : '' }}
+                    {{ !empty($settings['address_main']) ? ' | Đ/C: ' . $settings['address_main'] : (!empty($settings['address']) ? ' | ' . $settings['address'] : '') }}
+                </p>
+            @endif
         </div>
 
         <div class="info">
             <p><strong>Khách hàng:</strong> {{ $booking->customer_name ?? 'Khách lẻ' }}</p>
-            <p><strong>Số điện thoại:</strong> {{ $booking->phone ?? '' }}</p>
+            <p><strong>Số điện thoại:</strong> {{ $booking->phone ?? 'Chưa cập nhật' }}</p>
+            @if(!empty($booking->booking_date))
+                <p><strong>Ngày hẹn:</strong> {{ \Carbon\Carbon::parse($booking->booking_date)->format('d/m/Y H:i') }}</p>
+            @endif
         </div>
 
         <table>
             <thead>
                 <tr>
                     <th>Tên dịch vụ & Lịch trình</th>
-                    <th>Đơn giá</th>
-                    <th>SL</th>
-                    <th>Thành tiền</th>
+                    <th style="width: 130px; text-align: right;">Đơn giá</th>
+                    <th style="width: 50px; text-align: center;">SL</th>
+                    <th style="width: 140px; text-align: right;">Thành tiền</th>
                 </tr>
             </thead>
             <tbody>
@@ -66,26 +78,46 @@
                     @endphp
                     <tr>
                         <td>
-                            <strong>{{ $item->service_name }}</strong><br>
-                            <small>Ngày hẹn: {{ $item->service_date ? \Carbon\Carbon::parse($item->service_date)->format('d/m/Y H:i') : 'Chưa xếp lịch' }}</small>
+                            <strong>{{ $item->service_name }}</strong>
+                            @if($item->service_date)
+                                <br><small style="color: #666;">Ngày: {{ \Carbon\Carbon::parse($item->service_date)->format('d/m/Y H:i') }}</small>
+                            @endif
                             @if($item->description)
-                                <br><small>Ghi chú: {{ $item->description }}</small>
+                                <br><small style="color: #888; font-style: italic;">Ghi chú: {{ $item->description }}</small>
                             @endif
                         </td>
-                        <td>{{ number_format($item->price) }} đ</td>
-                        <td>{{ $item->quantity }}</td>
-                        <td>{{ number_format($thanhTien) }} đ</td>
+                        <td style="text-align: right;">{{ number_format($item->price) }} đ</td>
+                        <td style="text-align: center;">{{ $item->quantity }}</td>
+                        <td style="text-align: right; font-weight: bold;">{{ number_format($thanhTien) }} đ</td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
 
         <div class="total">
-            Tổng thanh toán: {{ number_format($total) }} VNĐ
+            Tổng thanh toán: {{ number_format($total ?: ($booking->total_amount ?? 0)) }} VNĐ
         </div>
 
+        {{-- THÔNG TIN CHUYỂN KHOẢN NGÂN HÀNG NẾU CÓ --}}
+        @if(!empty($settings['bank_name']) || !empty($settings['bank_account_number']))
+            <div style="margin-top: 30px; padding: 15px; background: #fdfbf7; border: 1px dashed #c8a98d; border-radius: 8px; font-size: 13px;">
+                <h4 style="margin: 0 0 8px; color: #3e2f2f; text-transform: uppercase;">Thông tin thanh toán chuyển khoản</h4>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        @if(!empty($settings['bank_name'])) <p style="margin: 3px 0;"><strong>Ngân hàng:</strong> {{ $settings['bank_name'] }}</p> @endif
+                        @if(!empty($settings['bank_account_number'])) <p style="margin: 3px 0;"><strong>Số tài khoản:</strong> <span style="font-size: 15px; color: #d97706; font-weight: bold;">{{ $settings['bank_account_number'] }}</span></p> @endif
+                        @if(!empty($settings['bank_account_holder'])) <p style="margin: 3px 0;"><strong>Chủ tài khoản:</strong> {{ $settings['bank_account_holder'] }}</p> @endif
+                        <p style="margin: 3px 0; color: #666; font-size: 11px;">Cú pháp CK: <strong>HD {{ $booking->id }} {{ $booking->phone }}</strong></p>
+                    </div>
+                    @if(!empty($settings['bank_qr_image']))
+                        <img src="{{ asset('storage/' . $settings['bank_qr_image']) }}" alt="QR Code" style="max-height: 90px; border-radius: 4px; border: 1px solid #ddd;">
+                    @endif
+                </div>
+            </div>
+        @endif
+
         <div class="note">
-            <p>Cảm ơn quý khách đã sử dụng dịch vụ!</p>
+            <p>{!! nl2br(e($settings['invoice_footer_note'] ?? 'Cảm ơn quý khách đã tin tưởng và sử dụng dịch vụ của chúng tôi!')) !!}</p>
         </div>
     </div>
 

@@ -2,7 +2,10 @@
 
 namespace App\Models;
 
+use App\Traits\HasOptimizedMedia;
+use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
+use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -10,10 +13,35 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements MustVerifyEmail, HasAvatar
+class User extends Authenticatable implements MustVerifyEmail, HasAvatar, FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, Notifiable, HasRoles, HasOptimizedMedia;
+
+    /**
+     * Media columns to automatically optimize.
+     */
+    public function getMediaOptimizationAttributes(): array
+    {
+        return [
+            'avatar' => ['maxWidth' => 500, 'quality' => 80],
+        ];
+    }
+
+    /**
+     * Determine if the user can access the Filament panel.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        if (app()->environment('local')) {
+            return true;
+        }
+
+        return $this->hasRole('super_admin')
+            || $this->hasRole('panel_user')
+            || $this->hasRole('admin')
+            || $this->can('access_admin_panel');
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -33,30 +61,33 @@ class User extends Authenticatable implements MustVerifyEmail, HasAvatar
         return $this->avatar ? asset('storage/' . $this->avatar) : null;
     }
 
+    /**
+     * Gửi email đặt lại mật khẩu theo mẫu cấu hình trong Notification Settings.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        try {
+            $resetUrl = url(route('filament.admin.auth.password-reset.reset', [
+                'token' => $token,
+                'email' => $this->getEmailForPasswordReset(),
+            ], false));
+
+            \App\Services\NotificationDispatcherService::sendPasswordReset($this, $resetUrl);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Lỗi khi gửi password reset qua NotificationDispatcherService: ' . $e->getMessage());
+            parent::sendPasswordResetNotification($token);
+        }
+    }
+
     protected static function booted()
     {
         // Gửi mail verify khi Admin tạo user mới
         static::created(function ($user) {
             if (is_null($user->email_verified_at)) {
-                $user->sendEmailVerificationNotification();
-            }
-        });
-
-        // Tự động nén ảnh avatar khi có ảnh mới
-        static::saved(function ($model) {
-            $columnName = 'avatar';
-
-            if (($model->wasRecentlyCreated || $model->wasChanged($columnName)) && !empty($model->{$columnName})) {
-                $path = Storage::disk('public')->path($model->{$columnName});
-
-                if (file_exists($path) && preg_match('/\.(jpg|jpeg|png|webp)$/i', $path)) {
-                    try {
-                        set_time_limit(120);
-                        \Tinify\setKey(env('TINYPNG_API_KEY'));
-                        \Tinify\fromFile($path)->toFile($path);
-                    } catch (\Exception $e) {
-                        \Illuminate\Support\Facades\Log::error('Lỗi TinyPNG Avatar: ' . $e->getMessage());
-                    }
+                try {
+                    $user->sendEmailVerificationNotification();
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('Email verification notification could not be sent: ' . $e->getMessage());
                 }
             }
         });

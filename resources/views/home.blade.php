@@ -22,7 +22,7 @@
                         {{ $settings['home_hero_subtitle'] ?? 'High-End Experience' }}
                     </span>
                     <h1 class="text-5xl md:text-7xl font-serif font-bold mb-6 leading-tight">{{ $banner->title }}</h1>
-                    <a href="{{ url('/booking') }}" class="inline-block bg-gold text-white px-10 py-4 rounded-full text-sm uppercase tracking-wider hover:bg-white hover:text-dark transition-all duration-500">
+                    <a href="{{ url('/booking') }}" class="inline-block btn-theme-primary px-10 py-4 rounded-full text-sm uppercase tracking-wider hover:opacity-90 transition-all duration-500 shadow-xl">
                         Đặt lịch ngay
                     </a>
                 </div>
@@ -41,7 +41,7 @@
                 <h1 class="text-5xl md:text-7xl font-serif font-bold mb-6 leading-tight">
                     {{ $settings['site_name'] ?? '' }}
                 </h1>
-                <a href="{{ url('/booking') }}" class="inline-block bg-gold text-white px-10 py-4 rounded-full text-sm uppercase tracking-wider hover:bg-white hover:text-dark transition-all duration-500">
+                <a href="{{ url('/booking') }}" class="inline-block btn-theme-primary px-10 py-4 rounded-full text-sm uppercase tracking-wider hover:opacity-90 transition-all duration-500 shadow-xl">
                     Đặt lịch ngay
                 </a>
             </div>
@@ -63,7 +63,7 @@
             </div>
             <div class="grid md:grid-cols-3 gap-8">
                 @foreach($services as $service)
-                <div class="group bg-primary p-12 rounded-2xl text-center hover:bg-[#3e2f2f] hover:text-white transition-all duration-500 shadow-sm shadow-black/5 transform hover:-translate-y-2">
+                <div class="group bg-primary p-12 rounded-2xl text-center hover:bg-dark hover:text-white transition-all duration-500 shadow-sm shadow-black/5 transform hover:-translate-y-2">
                     <h3 class="text-2xl font-serif mb-4 uppercase tracking-wider">{{ $service->name }}</h3>
                     <div class="w-12 h-[1px] bg-gold mx-auto mb-6 group-hover:w-20 transition-all"></div>
                     <p class="font-bold text-gold mb-4 text-xl tracking-widest">{{ $service->price_text }}</p>
@@ -88,13 +88,59 @@
     </section>
 
     <section class="py-32 bg-primary">
-        <div class="max-w-5xl mx-auto px-6 text-center">
-            <h2 class="text-4xl font-serif mb-12">{{ $settings['home_transform_title'] ?? 'The Magic Transformation' }}</h2>
-            <div class="rounded-3xl overflow-hidden shadow-2xl border-8 border-white">
-                <img-comparison-slider>
-                    <img slot="first" src="{{ $getImg('home_transform_before', 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?q=80&w=2000') }}" />
-                    <img slot="second" src="{{ $getImg('home_transform_after', 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?q=80&w=2000') }}" />
-                </img-comparison-slider>
+        <div class="max-w-5xl mx-auto px-6" data-aos="fade-up">
+            <div class="text-center mb-16">
+                <span class="text-xs uppercase tracking-[0.3em] text-gold font-semibold mb-3 block">Biến Hóa Diện Mạo</span>
+                <h2 class="text-4xl md:text-5xl font-serif text-dark tracking-tight">{{ $settings['home_transform_title'] ?? 'The Magic Transformation' }}</h2>
+                <div class="w-16 h-[2px] bg-gold mx-auto mt-6"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 max-w-4xl mx-auto items-stretch">
+                <!-- Before Card -->
+                <div class="group relative rounded-3xl overflow-hidden shadow-2xl border-4 md:border-8 border-white bg-dark/5 aspect-[9/16] transition-all duration-500 hover:shadow-black/10">
+                    <img src="{{ $getImg('home_transform_before', 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?q=80&w=2000') }}" 
+                         alt="Before Transformation" 
+                         class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out" />
+                    
+                    <!-- Gradient Overlays for readability -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-dark/80 via-transparent to-dark/30 pointer-events-none"></div>
+
+                    <!-- Top Badge -->
+                    <div class="absolute top-6 left-6">
+                        <span class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-serif uppercase tracking-widest bg-dark/70 text-white/90 backdrop-blur-md border border-white/20 shadow-sm">
+                            Before
+                        </span>
+                    </div>
+
+                    <!-- Bottom Info -->
+                    <div class="absolute bottom-6 left-6 right-6 text-left">
+                        <p class="text-white/70 text-xs uppercase tracking-widest font-sans mb-1">Khoảnh khắc ban đầu</p>
+                        <h3 class="text-white text-xl md:text-2xl font-serif font-medium tracking-wide">Vẻ Đẹp Mộc Mạc</h3>
+                    </div>
+                </div>
+
+                <!-- After Card -->
+                <div class="group relative rounded-3xl overflow-hidden shadow-2xl border-4 md:border-8 border-white bg-dark/5 aspect-[9/16] transition-all duration-500 hover:shadow-black/10">
+                    <img src="{{ $getImg('home_transform_after', 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?q=80&w=2000') }}" 
+                         alt="After Transformation" 
+                         class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out" />
+                    
+                    <!-- Gradient Overlays for readability -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-dark/80 via-transparent to-dark/30 pointer-events-none"></div>
+
+                    <!-- Top Badge -->
+                    <div class="absolute top-6 left-6">
+                        <span class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-serif uppercase tracking-widest bg-gold text-white backdrop-blur-md border border-white/30 shadow-md">
+                            ★ After
+                        </span>
+                    </div>
+
+                    <!-- Bottom Info -->
+                    <div class="absolute bottom-6 left-6 right-6 text-left">
+                        <p class="text-gold text-xs uppercase tracking-widest font-sans mb-1">Sau khi trang điểm</p>
+                        <h3 class="text-white text-xl md:text-2xl font-serif font-medium tracking-wide">Nghệ Thuật Biến Hóa</h3>
+                    </div>
+                </div>
             </div>
         </div>
     </section>

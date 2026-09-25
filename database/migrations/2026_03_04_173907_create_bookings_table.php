@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('phone');
             $table->string('zalo')->nullable();
             $table->string('social_link')->nullable();
-            $table->foreignId('service_id')->nullable()->constrained('services')->nullOnDelete();
+            $table->unsignedBigInteger('service_id')->nullable();
             $table->dateTime('booking_date')->nullable();
             $table->text('message')->nullable();
             $table->string('status')->default('pending'); // pending, confirmed, completed, canceled

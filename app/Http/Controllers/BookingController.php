@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Http\Requests\StoreBookingRequest;
 use App\Models\Service;
 use App\Models\Booking;
 
@@ -14,34 +15,35 @@ class BookingController extends Controller
         return view('booking', compact('services'));
     }
 
-    public function store(Request $request)
+    public function store(StoreBookingRequest $request)
     {
-        // 1. Validate dữ liệu: Đổi service_id thành mảng service_ids
-        $request->validate([
-            'customer_name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
-            'zalo' => 'nullable|string|max:20',
-            'social_link' => 'nullable|string|max:255',
-            'booking_date' => 'required|date',
-            'service_ids'   => 'required|array|min:1', // Phải là mảng và chọn ít nhất 1
-            'service_ids.*' => 'exists:services,id',   // Từng ID trong mảng phải hợp lệ
-            'message' => 'nullable|string',
-        ], [
-            'service_ids.required' => 'Vui lòng chọn ít nhất một dịch vụ.',
-        ]);
+        $validated = $request->validated();
 
-        // 2. Lưu vào DB (Sử dụng service_ids thay vì service_id)
-        Booking::create([
-            'customer_name' => $request->customer_name,
-            'phone' => $request->phone,
-            'zalo' => $request->zalo,
-            'social_link' => $request->social_link,
-            'service_ids' => $request->service_ids, // Lưu mảng vào database
-            'booking_date' => $request->booking_date,
-            'message' => $request->message,
+        $booking = Booking::create([
+            'customer_name' => $validated['customer_name'],
+            'phone' => $validated['phone'],
+            'social_link' => $validated['social_link'] ?? null,
+            'service_ids' => $validated['service_ids'],
+            'booking_date' => $validated['booking_date'],
+            'message' => $validated['message'] ?? null,
             'status' => 'pending',
         ]);
 
-        return back()->with('success', 'Thảo đã nhận được thông tin. Thảo sẽ liên hệ lại với bạn sớm nhất nhé!');
+        $successMsg = \App\Models\Setting::get('booking_success_message', 'Cảm ơn quý khách! Chúng tôi đã nhận được thông tin và sẽ liên hệ lại sớm nhất.');
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $successMsg,
+                'data' => [
+                    'id' => $booking->id,
+                    'customer_name' => $booking->customer_name,
+                    'phone' => $booking->phone,
+                    'booking_date' => !empty($booking->booking_date) ? date('d/m/Y', strtotime($booking->booking_date)) : '',
+                ],
+            ]);
+        }
+
+        return back()->with('success', $successMsg);
     }
 }

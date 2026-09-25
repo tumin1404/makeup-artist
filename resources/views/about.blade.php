@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" />
     <style>
-        .about-image-shadow { box-shadow: 20px 20px 0px 0px #c8a98d; }
+        .about-image-shadow { box-shadow: 20px 20px 0px 0px var(--color-gold); }
         .play-btn-pulse { animation: pulse-ring 2s infinite; }
         @keyframes pulse-ring {
             0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(200, 169, 141, 0.7); }
@@ -145,15 +145,15 @@
     <section id="academy" class="relative py-32 text-white text-center overflow-hidden">
         <div class="absolute inset-0 w-full h-full">
             <img src="{{ $getImg('about_academy_bg', 'https://images.unsplash.com/photo-1516975080664-ed2fc6a32937') }}" class="w-full h-full object-cover">
-            <div class="absolute inset-0 bg-[#2a1f1f]/80"></div> </div>
+            <div class="absolute inset-0 bg-dark/80"></div> </div>
 
         <div class="relative z-10 max-w-3xl mx-auto px-6" data-aos="zoom-in">
-            <span class="text-gold text-xs tracking-widest uppercase mb-4 block" style="color: #c8a98d;">Academy</span>
+            <span class="text-gold text-xs tracking-widest uppercase mb-4 block">Academy</span>
             <h2 class="text-4xl md:text-5xl font-serif mb-6 italic">Đào Tạo Chuyên Nghiệp</h2>
             <p class="text-lg font-light text-white/80 mb-10 leading-relaxed">
                 {{ $settings['about_academy_desc'] ?? 'Khơi dậy tiềm năng nghệ thuật trong bạn. Các khóa đào tạo từ makeup cá nhân đến chuyên nghiệp, cam kết truyền lửa và đồng hành cùng đam mê.' }}
             </p>
-            <a href="{{ $settings['social_zalo'] ?? '#' }}" target="_blank" class="inline-block px-10 py-4 rounded-full text-xs uppercase tracking-widest font-bold transition-all" style="background-color: #c8a98d; color: #3e2f2f;">
+            <a href="{{ $settings['social_zalo'] ?? '#' }}" target="_blank" class="inline-block px-10 py-4 rounded-full text-xs uppercase tracking-widest font-bold transition-all bg-gold text-dark hover:bg-white hover:text-dark">
                 Tìm hiểu khóa học
             </a>
         </div>

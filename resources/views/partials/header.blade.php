@@ -16,7 +16,7 @@
             <a href="/posts" class="{{ Request::is('posts*') ? 'text-gold' : 'text-dark hover:text-gold' }} transition-colors duration-300">Tạp chí</a>
         </nav>
 
-        <a href="/booking" class="hidden md:inline-block bg-gold text-white px-6 py-2.5 rounded-full text-sm hover:bg-[#b5977d] transition-colors duration-300 shadow-lg">
+        <a href="/booking" class="hidden md:inline-block btn-theme-primary px-6 py-2.5 rounded-full text-sm hover:opacity-90 transition-all duration-300 shadow-lg">
             Đặt lịch ngay
         </a>
 
@@ -35,7 +35,7 @@
             
             <hr class="border-gray-100">
             
-            <a href="/booking" class="bg-gold text-white px-8 py-3 rounded-full text-sm font-bold uppercase tracking-widest shadow-md">
+            <a href="/booking" class="btn-theme-primary px-8 py-3 rounded-full text-sm font-bold uppercase tracking-widest shadow-md">
                 Đặt lịch ngay
             </a>
         </div>

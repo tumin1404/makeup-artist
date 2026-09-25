@@ -6,6 +6,7 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\PortfolioController;
+use App\Http\Controllers\SitemapController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,9 +18,12 @@ use App\Http\Controllers\PortfolioController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/gioi-thieu', [HomeController::class, 'about'])->name('about');
 
+// XML Sitemap chuẩn SEO Google
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+
 // Dịch vụ & Báo giá
 Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
-Route::get('/services/{slug}', [ServiceController::class, 'show'])->name('services.show');
+Route::get('/services/{service}', [ServiceController::class, 'show'])->name('services.show');
 
 // Tạp chí / Blog
 Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
@@ -30,7 +34,7 @@ Route::get('/portfolio', [PortfolioController::class, 'index'])->name('portfolio
 
 // Đặt lịch (Booking)
 Route::get('/booking', [BookingController::class, 'index'])->name('booking.index');
-Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
+Route::post('/booking', [BookingController::class, 'store'])->middleware('throttle:10,1')->name('booking.store');
 
 /*
 |--------------------------------------------------------------------------
@@ -53,7 +57,7 @@ use App\Models\Booking;
 Route::get('/booking/{booking}/invoice', function (Booking $booking) {
     $booking->load('items'); // Lấy dữ liệu các dịch vụ con
     return view('invoice', compact('booking'));
-})->name('booking.invoice');
+})->middleware(['auth', 'can:view,booking'])->name('booking.invoice');
 
 // Lưu ý: Filament tự động tạo các route như /admin/posts, /admin/services...
 // Bạn chỉ cần đảm bảo các Resource đã được đăng ký trong Filament.

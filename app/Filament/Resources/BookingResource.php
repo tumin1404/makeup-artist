@@ -32,6 +32,22 @@ class BookingResource extends Resource
     protected static ?string $pluralModelLabel = 'Quản lý đặt lịch';
     protected static ?int $navigationSort = 1;
 
+    public static function getNavigationBadge(): ?string
+    {
+        $count = static::getModel()::where('status', 'pending')->count();
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Đơn đặt lịch mới cần xác nhận';
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -44,17 +60,15 @@ class BookingResource extends Resource
                             ->required()
                             ->maxLength(255),
                         TextInput::make('phone')
-                            ->label('Số điện thoại')
+                            ->label('Số điện thoại / Zalo')
                             ->tel()
                             ->required()
-                            ->maxLength(255),
-                        TextInput::make('zalo')
-                            ->label('Số Zalo')
                             ->maxLength(255),
                         TextInput::make('social_link')
                             ->label('Link Facebook/IG')
                             ->url()
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->columnSpanFull(),
                     ])->columns(2),
 
                 Section::make('Chi tiết dịch vụ yêu cầu')
@@ -62,7 +76,7 @@ class BookingResource extends Resource
                         Select::make('service_ids')
                             ->label('Dịch vụ khách quan tâm')
                             ->multiple()
-                            ->options(Service::pluck('name', 'id'))
+                            ->options(fn () => Service::pluck('name', 'id'))
                             ->searchable()
                             ->preload()
                             ->columnSpanFull(),
@@ -109,7 +123,7 @@ class BookingResource extends Resource
                             ->schema([
                                 Select::make('service_name')
                                     ->label('Chọn dịch vụ')
-                                    ->options(Service::pluck('name', 'name'))
+                                    ->options(fn () => Service::pluck('name', 'name'))
                                     ->searchable()
                                     ->live()
                                     ->afterStateUpdated(function ($state, callable $set) {

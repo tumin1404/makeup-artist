@@ -12,14 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('bookings', function (Blueprint $table) {
-            // 1. Phải xóa khóa ngoại trước
-            $table->dropForeign(['service_id']); 
+            if (Schema::hasColumn('bookings', 'service_id')) {
+                $table->dropColumn('service_id');
+            }
             
-            // 2. Sau đó mới xóa cột
-            $table->dropColumn('service_id');
-            
-            // 3. Cuối cùng thêm cột mới
-            $table->json('service_ids')->nullable(); 
+            if (!Schema::hasColumn('bookings', 'service_ids')) {
+                $table->json('service_ids')->nullable();
+            }
         });
     }
 

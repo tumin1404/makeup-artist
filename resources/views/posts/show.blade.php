@@ -1,6 +1,56 @@
 @extends('layouts.app')
 
 @section('title', $post->title . ' | ' . ($settings['site_name'] ?? ''))
+@section('meta_description', Str::limit(strip_tags($post->summary ?? $post->content), 160))
+
+@section('meta')
+    @php
+        $postImg = !empty($post->thumbnail) ? asset('storage/' . $post->thumbnail) : (!empty($settings['site_meta_image']) ? asset('storage/' . $settings['site_meta_image']) : asset('images/default-share.jpg'));
+    @endphp
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:title" content="{{ $post->title }}">
+    <meta property="og:description" content="{{ Str::limit(strip_tags($post->summary ?? $post->content), 160) }}">
+    <meta property="og:image" content="{{ $postImg }}">
+    <meta property="article:published_time" content="{{ $post->published_at ? $post->published_at->toIso8601String() : $post->created_at->toIso8601String() }}">
+    <meta property="article:author" content="{{ $post->author?->name ?? ($settings['author_name'] ?? ($settings['site_name'] ?? 'Makeup Artist')) }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $post->title }}">
+    <meta name="twitter:description" content="{{ Str::limit(strip_tags($post->summary ?? $post->content), 160) }}">
+    <meta name="twitter:image" content="{{ $postImg }}">
+
+    @php
+        $schemaArticle = [
+            '@context' => 'https://schema.org',
+            '@type' => 'Article',
+            'headline' => $post->title,
+            'description' => Str::limit(strip_tags($post->summary ?? $post->content), 160),
+            'image' => $postImg,
+            'datePublished' => $post->published_at ? $post->published_at->toIso8601String() : $post->created_at->toIso8601String(),
+            'dateModified' => $post->updated_at->toIso8601String(),
+            'author' => [
+                '@type' => 'Person',
+                'name' => $post->author?->name ?? ($settings['author_name'] ?? 'Makeup Artist'),
+            ],
+            'publisher' => [
+                '@type' => 'Organization',
+                'name' => $settings['site_name'] ?? 'Makeup Artist',
+                'logo' => [
+                    '@type' => 'ImageObject',
+                    'url' => !empty($settings['site_logo']) ? asset('storage/' . $settings['site_logo']) : asset('favicon.ico'),
+                ],
+            ],
+            'mainEntityOfPage' => [
+                '@type' => 'WebPage',
+                '@id' => url()->current(),
+            ],
+        ];
+    @endphp
+    {{-- JSON-LD Article Schema --}}
+    <script type="application/ld+json">
+    {!! json_encode($schemaArticle, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}
+    </script>
+@endsection
 
 @php
     $getImg = fn($key, $default) => empty($settings[$key]) ? $default : (str_starts_with($settings[$key], 'http') ? $settings[$key] : asset('storage/' . $settings[$key]));
@@ -10,7 +60,7 @@
     <style>
         /* Tối ưu hóa cho nội dung từ CMS */
         .article-content p {
-            font-family: 'Inter', sans-serif;
+            font-family: var(--font-sans);
             font-weight: 300;
             line-height: 1.8;
             color: #4a3f3f;
@@ -20,19 +70,19 @@
         
         /* Drop cap - Chữ cái lớn đầu đoạn */
         .article-content > p:first-of-type::first-letter {
-            font-family: 'Playfair Display', serif;
+            font-family: var(--font-serif);
             font-size: 4rem;
             float: left;
             line-height: 0.8;
             margin-right: 0.75rem;
-            color: #c8a98d;
+            color: var(--color-gold);
             font-weight: bold;
         }
 
         .article-content h2 {
-            font-family: 'Playfair Display', serif;
+            font-family: var(--font-serif);
             font-size: 2rem;
-            color: #3e2f2f;
+            color: var(--color-dark);
             margin-top: 3rem;
             margin-bottom: 1.5rem;
             font-weight: 600;
@@ -46,13 +96,13 @@
         }
 
         .article-content blockquote {
-            border-left: 2px solid #c8a98d;
+            border-left: 2px solid var(--color-gold);
             padding-left: 1.5rem;
             margin: 2.5rem 0;
-            font-family: 'Playfair Display', serif;
+            font-family: var(--font-serif);
             font-size: 1.5rem;
             font-style: italic;
-            color: #c8a98d;
+            color: var(--color-gold);
             line-height: 1.6;
         }
 
@@ -73,7 +123,7 @@
             content: '•';
             position: absolute;
             left: 0;
-            color: #c8a98d;
+            color: var(--color-gold);
             font-size: 1.2rem;
         }
         .article-content figcaption {

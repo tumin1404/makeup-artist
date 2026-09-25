@@ -34,7 +34,6 @@ class PortfolioResource extends Resource
                             ->relationship(
                                 name: 'category', 
                                 titleAttribute: 'name', 
-                                // Chỉ lấy các danh mục dành cho Portfolio
                                 modifyQueryUsing: fn (Builder $query) => $query->where('type', Category::TYPE_PORTFOLIO)
                             )
                             ->searchable()
@@ -44,22 +43,21 @@ class PortfolioResource extends Resource
                         \Filament\Forms\Components\Select::make('type')
                             ->label('Định dạng tệp')
                             ->options([
-                                'image' => 'Hình ảnh (JPG, PNG)',
-                                'video' => 'Video (MP4 ngắn)',
+                                'image' => '🖼️ Hình ảnh (Tự động nén WebP)',
+                                'video' => '🎬 Video ngắn (Tự động nén Silent Micro-Video & tạo Poster)',
                             ])
                             ->default('image')
-                            ->live() // Tự động làm mới form khi bạn đổi giữa Ảnh và Video
+                            ->live()
                             ->required(),
     
                         \Filament\Forms\Components\FileUpload::make('file_path')
                             ->label('Tải tệp lên')
                             ->directory('portfolios')
-                            // Cho phép nhận cả Ảnh và Video MP4 luôn để tránh lỗi kẹt bộ lọc
-                            ->acceptedFileTypes(['image/*', 'video/mp4']) 
-                            ->imageResizeTargetWidth(1080) // Tự động thu nhỏ ảnh lớn xuống tối đa ngang 1080px
-                            ->maxSize(15360)
-                            ->panelAspectRatio('2:1') // THÊM DÒNG NÀY: Khóa cứng tỷ lệ khung
+                            ->acceptedFileTypes(['image/*', 'video/mp4', 'video/quicktime', 'video/webm']) 
+                            ->maxSize(51200) // 50MB
+                            ->panelAspectRatio('2:1')
                             ->panelLayout('integrated')
+                            ->helperText('Hệ thống sẽ tự động tối ưu hóa: Ảnh chuyển thành .WebP (giảm 85%), Video chuyển thành định dạng Silent mượt mà không tiếng (giảm 98% dung lượng).')
                             ->required(),
                             
                         \Filament\Forms\Components\TextInput::make('title')
@@ -76,24 +74,60 @@ class PortfolioResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\ImageColumn::make('file_path')
-                    ->label('Hình ảnh')
-                    ->size(50) // Kích thước thumbnail vuông 50px
-                    ->disk('public') // Thêm dòng này để ép Filament đọc đúng thư mục
-                    ->circular(),
-                \Filament\Tables\Columns\TextColumn::make('title')->label('Tiêu đề'),
+                Tables\Columns\ImageColumn::make('preview')
+                    ->label('Ảnh / Poster')
+                    ->state(function (Portfolio $record) {
+                        if ($record->type === 'video') {
+                            if (!empty($record->poster_path) && \Illuminate\Support\Facades\Storage::disk('public')->exists($record->poster_path)) {
+                                return $record->poster_path;
+                            }
+                            // Check if poster file exists on disk
+                            if (!empty($record->file_path)) {
+                                $pathInfo = pathinfo($record->file_path);
+                                $targetDir = ($pathInfo['dirname'] !== '.' && $pathInfo['dirname'] !== '') ? $pathInfo['dirname'] . '/' : '';
+                                $possiblePoster = $targetDir . $pathInfo['filename'] . '_poster.webp';
+                                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($possiblePoster)) {
+                                    return $possiblePoster;
+                                }
+
+                                // Attempt on-the-fly poster extraction
+                                $extracted = app(\App\Services\Media\MediaOptimizerService::class)->extractPoster($record->file_path);
+                                if ($extracted) {
+                                    $record->poster_path = $extracted;
+                                    $record->saveQuietly();
+                                    return $extracted;
+                                }
+                            }
+                            return null;
+                        }
+                        return $record->file_path;
+                    })
+                    ->size(56)
+                    ->disk('public')
+                    ->square()
+                    ->extraImgAttributes(['class' => 'rounded-lg object-cover shadow-sm border border-gray-200']),
+                \Filament\Tables\Columns\TextColumn::make('title')
+                    ->label('Tiêu đề')
+                    ->searchable()
+                    ->placeholder('(Không có tiêu đề)'),
                 Tables\Columns\TextColumn::make('category.name')
                     ->label('Danh mục')
                     ->badge()
                     ->color('info'),
-                \Filament\Tables\Columns\TextColumn::make('type')->label('Loại')->badge(),
-                \Filament\Tables\Columns\IconColumn::make('is_active')->label('Hiển thị')->boolean(),
+                \Filament\Tables\Columns\TextColumn::make('type')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state) => $state === 'video' ? '🎬 Video' : '🖼️ Ảnh')
+                    ->color(fn (string $state) => $state === 'video' ? 'warning' : 'primary')
+                    ->label('Loại'),
+                \Filament\Tables\Columns\ToggleColumn::make('is_active')
+                    ->label('Hiển thị'),
             ])
             ->filters([
                 //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

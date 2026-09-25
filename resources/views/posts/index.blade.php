@@ -23,7 +23,7 @@
             height: 1px;
             bottom: -2px;
             left: 0;
-            background-color: #c8a98d;
+            background-color: var(--color-gold);
             transition: width 0.3s ease;
         }
         .read-more-link:hover::after { width: 100%; }

@@ -57,7 +57,10 @@
                                 <img src="{{ asset('storage/' . $item->file_path) }}" class="w-full object-cover transform group-hover:scale-105 transition-transform duration-700">
                             </a>
                         @else
-                            <video class="w-full object-cover transform group-hover:scale-105 transition-transform duration-700 pointer-events-none" autoplay loop muted playsinline>
+                            <video class="w-full object-cover transform group-hover:scale-105 transition-transform duration-700 pointer-events-none" 
+                                   autoplay loop muted playsinline 
+                                   poster="{{ !empty($item->poster_path) ? asset('storage/' . $item->poster_path) : '' }}"
+                                   preload="metadata">
                                 <source src="{{ asset('storage/' . $item->file_path) }}" type="video/mp4">
                             </video>
                         @endif

@@ -21,6 +21,29 @@ class PaymentResource extends Resource
     protected static ?string $pluralModelLabel = 'Thanh toán & Công nợ';
     protected static ?int $navigationSort = 2; // Nằm dưới trang Chi phí
 
+    public static function getNavigationBadge(): ?string
+    {
+        $tongTienHopDong = \App\Models\Booking::where('status', '!=', 'canceled')->sum('total_amount');
+        $tongTienDaThu = static::getModel()::sum('amount');
+        $congNo = $tongTienHopDong - $tongTienDaThu;
+
+        if ($congNo > 0) {
+            return number_format($congNo, 0, ',', '.') . 'đ';
+        }
+
+        return null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'danger';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Tổng công nợ khách hàng cần thanh toán';
+    }
+
     public static function form(Form $form): Form
     {
         return $form

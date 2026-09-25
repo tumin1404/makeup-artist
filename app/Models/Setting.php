@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
+use App\Services\Media\MediaOptimizerService;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 
 class Setting extends Model
 {
@@ -13,7 +14,8 @@ class Setting extends Model
         'key', 
         'value', 
         'type', 
-        'description'
+        'description',
+        'recommendation',
     ];
 
     /**
@@ -28,24 +30,21 @@ class Setting extends Model
     protected static function booted()
     {
         static::saved(function ($model) {
-            // 1. Chỉ chạy khi type là 'image', có giá trị trong cột 'value', và dữ liệu vừa được tạo/sửa
-            if ($model->type === 'image' && !empty($model->value) && ($model->wasRecentlyCreated || $model->wasChanged('value'))) {
-                
-                // 2. Lấy đường dẫn thực tế của file
-                $path = storage_path('app/public/' . $model->value); 
+            Cache::forget('site_settings');
 
-                // 3. Kiểm tra file tồn tại và đúng đuôi ảnh
-                if (file_exists($path) && preg_match('/\.(jpg|jpeg|png|webp)$/i', $path)) {
-                    try {
-                        set_time_limit(120); // Tăng thời gian chờ lên 2 phút
-                        \Tinify\setKey(env('TINYPNG_API_KEY'));
-                        \Tinify\fromFile($path)->toFile($path);
-                    } catch (\Exception $e) {
-                        // Ghi log lỗi nếu API hết lượt hoặc lỗi mạng (tùy chọn)
-                        \Illuminate\Support\Facades\Log::error('TinyPNG Error: ' . $e->getMessage());
-                    }
+            if ($model->type === 'image' && !empty($model->value) && ($model->wasRecentlyCreated || $model->wasChanged('value'))) {
+                $optimizer = app(MediaOptimizerService::class);
+                $result = $optimizer->optimizeImage($model->value, ['maxWidth' => 1920, 'quality' => 80]);
+                if (!empty($result['success']) && !empty($result['path']) && $result['path'] !== $model->value) {
+                    $model->value = $result['path'];
+                    $model->saveQuietly();
+                    Cache::forget('site_settings');
                 }
             }
+        });
+
+        static::deleted(function () {
+            Cache::forget('site_settings');
         });
     }
 }

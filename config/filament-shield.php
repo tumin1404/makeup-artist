@@ -5,7 +5,7 @@ return [
         'should_register_navigation' => true,
         'slug' => 'shield/roles',
         'navigation_sort' => -1,
-        'navigation_badge' => true,
+        'navigation_badge' => false,
         'navigation_group' => 'Hệ thống',
         'sub_navigation_position' => null,
         'is_globally_searchable' => false,
@@ -23,7 +23,7 @@ return [
     'super_admin' => [
         'enabled' => true,
         'name' => 'super_admin',
-        'define_via_gate' => false,
+        'define_via_gate' => true,
         'intercept_gate' => 'before', // after
     ],
 

@@ -2,44 +2,55 @@
 
 namespace App\Listeners;
 
+use App\Jobs\SendLoginAlertJob;
+use Filament\Facades\Filament;
 use Illuminate\Auth\Events\Login;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Http;
-use App\Models\Setting;
+use Illuminate\Support\Facades\Cache;
 
 class SendLoginAlert
 {
+    /**
+     * Xử lý sự kiện đăng nhập tài khoản.
+     * Chỉ kích hoạt cảnh báo khi người dùng đăng nhập vào khu vực Quản trị Admin (Filament Admin Panel).
+     */
     public function handle(Login $event): void
     {
         $user = $event->user;
-        $ip = request()->ip();
-        $userAgent = request()->userAgent();
-        
-        // Lấy tên website từ setting
-        $siteName = Setting::get('site_name', 'Hệ thống');
-        
-        // Lấy vị trí từ IP (Dùng API miễn phí ip-api)
-        $location = 'Không xác định';
-        if ($ip !== '127.0.0.1' && $ip !== '::1') {
-            $response = Http::get("http://ip-api.com/json/{$ip}");
-            if ($response->ok() && $response->json('status') === 'success') {
-                $location = $response->json('city') . ', ' . $response->json('country');
-            }
-        } else {
-            $location = 'Localhost (Máy tính nội bộ)';
+        $request = request();
+        $ip = $request?->ip() ?? '127.0.0.1';
+        $userAgent = $request?->userAgent() ?? 'Unknown';
+
+        // 1. Chỉ phát cảnh báo khi người dùng thực hiện đăng nhập vào khu vực Quản trị Admin
+        // Tuyệt đối không gửi cảnh báo khi người dùng duyệt xem giao diện trang chủ, blog, dịch vụ công khai phía ngoài
+        $isAdminArea = false;
+        if ($request) {
+            $isAdminArea = $request->is('admin*')
+                || ($request->route() && str_starts_with($request->route()->getName() ?? '', 'filament.'));
+        } elseif (app()->runningInConsole()) {
+            $isAdminArea = true;
         }
 
-        // Gửi mail trực tiếp dùng giao diện
-        Mail::send('emails.login-alert', [
-            'user' => $user,
-            'ip' => $ip,
-            'location' => $location,
-            'userAgent' => $userAgent,
-            'time' => now()->format('H:i d/m/Y'),
-            'siteName' => $siteName // Truyền biến vào view để dùng nếu cần
-        ], function ($message) use ($user, $siteName) {
-            $message->to($user->email)
-                    ->subject("Cảnh báo bảo mật: Đăng nhập tài khoản - {$siteName}");
-        });
+        if (!$isAdminArea) {
+            return;
+        }
+
+        // 2. Chỉ gửi cảnh báo đối với tài khoản có quyền truy cập trang Quản trị Admin
+        if (method_exists($user, 'canAccessPanel') && !app()->runningInConsole()) {
+            $adminPanel = Filament::getPanel('admin');
+            if ($adminPanel && !$user->canAccessPanel($adminPanel)) {
+                return;
+            }
+        }
+
+        // 3. Khóa đệm chống spam (Rate Limiting Cooldown):
+        // Không gửi lại cảnh báo cho cùng 1 user + 1 IP trong vòng 5 phút
+        $cacheKey = "login_alert_cooldown_{$user->id}_" . md5($ip);
+        if (Cache::has($cacheKey)) {
+            return;
+        }
+
+        Cache::put($cacheKey, true, now()->addMinutes(5));
+
+        SendLoginAlertJob::dispatch($user, $ip, $userAgent);
     }
 }

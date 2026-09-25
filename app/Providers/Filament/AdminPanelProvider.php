@@ -44,9 +44,17 @@ class AdminPanelProvider extends PanelProvider
             ->passwordReset()
             ->emailVerification()
             ->profile()
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('30s')
+            ->sidebarCollapsibleOnDesktop()
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
-                fn (): string => Blade::render('<style>.filepond--root video { width: 100% !important; height: 100% !important; object-fit: contain !important; border-radius: 0.5rem; }</style>')
+                fn (): string => Blade::render('<style>
+                    .filepond--root video { width: 100% !important; height: 100% !important; object-fit: contain !important; border-radius: 0.5rem; }
+                    .fi-sidebar-item-button { transition: all 0.2s ease-in-out; }
+                    .fi-sidebar-collapsed .fi-sidebar-item-button:hover { transform: scale(1.08); }
+                    .tippy-box { font-size: 0.8125rem; font-weight: 500; border-radius: 0.375rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+                </style>')
             )
             ->navigationGroups([
                 NavigationGroup::make()->label('Quản lý Website'),
@@ -57,7 +65,6 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Amber,
             ])
             ->plugins([
-                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
                 \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')

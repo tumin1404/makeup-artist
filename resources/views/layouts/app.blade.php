@@ -3,54 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $settings['site_name'] ?? 'Trang chủ' }}</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', $settings['site_name'] ?? 'Makeup Artist & Beauty Studio')</title>
+    <link rel="canonical" href="{{ url()->current() }}">
     
-    <meta name="description" content="{{ $settings['site_description'] ?? 'Makeup Artist chuyên trang điểm cô dâu, sự kiện, nghệ sĩ tại Hà Nội và Hưng Yên.' }}">
-    <meta property="og:image" content="{{ !empty($settings['site_meta_image']) ? asset('storage/' . $settings['site_meta_image']) : asset('images/default-share.jpg') }}">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
+    <meta name="description" content="@yield('meta_description', $settings['site_description'] ?? 'Dịch vụ trang điểm chuyên nghiệp, tôn vinh vẻ đẹp tự nhiên và sang trọng.')">
+    @if(!empty($settings['site_keywords']))
+        <meta name="keywords" content="{{ $settings['site_keywords'] }}">
+    @endif
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    
+    @hasSection('meta')
+        @yield('meta')
+    @else
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ url()->current() }}">
+        <meta property="og:title" content="{{ $settings['site_name'] ?? 'Makeup Artist' }}">
+        <meta property="og:description" content="{{ $settings['site_description'] ?? 'Dịch vụ trang điểm chuyên nghiệp.' }}">
+        <meta property="og:image" content="{{ !empty($settings['site_meta_image']) ? (str_starts_with($settings['site_meta_image'], 'http') ? $settings['site_meta_image'] : asset('storage/' . $settings['site_meta_image'])) : asset('images/default-share.jpg') }}">
+        <meta property="og:image:width" content="1200">
+        <meta property="og:image:height" content="630">
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="{{ $settings['site_name'] ?? 'Makeup Artist' }}">
+        <meta name="twitter:description" content="{{ $settings['site_description'] ?? 'Dịch vụ trang điểm chuyên nghiệp.' }}">
+        <meta name="twitter:image" content="{{ !empty($settings['site_meta_image']) ? (str_starts_with($settings['site_meta_image'], 'http') ? $settings['site_meta_image'] : asset('storage/' . $settings['site_meta_image'])) : asset('images/default-share.jpg') }}">
+    @endif
+
     @if(!empty($settings['site_favicon']))
         <link rel="icon" href="{{ asset('storage/' . $settings['site_favicon']) }}">
         <link rel="shortcut icon" href="{{ asset('storage/' . $settings['site_favicon']) }}">
     @endif
 
+    {{-- JSON-LD Structured Data (Schema.org / BeautySalon) --}}
+    @php
+        $sameAs = array_values(array_filter([
+            $settings['social_facebook'] ?? null,
+            $settings['social_instagram'] ?? null,
+            $settings['social_tiktok'] ?? null,
+            $settings['social_youtube'] ?? null,
+            $settings['social_zalo'] ?? null,
+        ]));
+        $logoUrl = !empty($settings['site_logo']) ? (str_starts_with($settings['site_logo'], 'http') ? $settings['site_logo'] : asset('storage/' . $settings['site_logo'])) : asset('favicon.ico');
+        $schemaBeautySalon = [
+            '@context' => 'https://schema.org',
+            '@type' => 'BeautySalon',
+            'name' => $settings['site_name'] ?? 'Makeup Artist Studio',
+            'description' => $settings['site_description'] ?? 'Dịch vụ trang điểm chuyên nghiệp.',
+            'url' => url('/'),
+            'logo' => $logoUrl,
+            'image' => !empty($settings['site_meta_image']) ? asset('storage/' . $settings['site_meta_image']) : $logoUrl,
+            'telephone' => $settings['hotline'] ?? '',
+            'email' => $settings['email'] ?? '',
+            'address' => [
+                '@type' => 'PostalAddress',
+                'streetAddress' => $settings['address_main'] ?? ($settings['address'] ?? 'Hà Nội'),
+                'addressLocality' => 'Hà Nội',
+                'addressCountry' => 'VN',
+            ],
+            'priceRange' => '$$',
+            'openingHours' => 'Mo-Su 08:00-20:00',
+            'sameAs' => $sameAs,
+        ];
+    @endphp
+    <script type="application/ld+json">
+    {!! json_encode($schemaBeautySalon, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}
+    </script>
+
+    @php
+        $headingFontType = $settings['theme_font_heading_type'] ?? 'google';
+        $headingFont = $settings['theme_font_heading'] ?? 'Playfair Display';
+        $customHeadingFont = $settings['theme_custom_heading_font_file'] ?? null;
+
+        $bodyFontType = $settings['theme_font_body_type'] ?? 'google';
+        $bodyFont = $settings['theme_font_body'] ?? 'Inter';
+        $customBodyFont = $settings['theme_custom_body_font_file'] ?? null;
+
+        $googleFonts = [];
+        if ($headingFontType === 'google' && !empty($headingFont)) {
+            $googleFonts[] = 'family=' . str_replace(' ', '+', $headingFont) . ':ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600';
+        }
+        if ($bodyFontType === 'google' && !empty($bodyFont)) {
+            $googleFonts[] = 'family=' . str_replace(' ', '+', $bodyFont) . ':ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600';
+        }
+
+        $googleFontsUrl = !empty($googleFonts) ? 'https://fonts.googleapis.com/css2?' . implode('&', array_unique($googleFonts)) . '&display=swap' : null;
+
+        $colorPrimary = $settings['theme_color_primary'] ?? '#f6f1ec';
+        $colorGold = $settings['theme_color_gold'] ?? '#c8a98d';
+        $colorDark = $settings['theme_color_dark'] ?? '#3e2f2f';
+        $colorButton = $settings['theme_color_button'] ?? '#3e2f2f';
+        $colorButtonText = $settings['theme_color_button_text'] ?? '#ffffff';
+
+        $headingFontFamily = ($headingFontType === 'custom' && !empty($customHeadingFont)) ? "'CustomHeadingFont', serif" : "'{$headingFont}', serif";
+        $bodyFontFamily = ($bodyFontType === 'custom' && !empty($customBodyFont)) ? "'CustomBodyFont', sans-serif" : "'{$bodyFont}', sans-serif";
+    @endphp
+
+    @if($googleFontsUrl)
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="{{ $googleFontsUrl }}" rel="stylesheet">
+    @endif
 
     <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/img-comparison-slider@8/dist/styles.css"/>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#f6f1ec', // Màu nền kem sang trọng
-                        gold: '#c8a98d',    // Màu vàng đồng
-                        dark: '#3e2f2f',    // Màu nâu trầm trong ảnh mẫu
-                    },
-                    fontFamily: {
-                        serif: ['"Playfair Display"', 'serif'],
-                        sans: ['"Inter"', 'sans-serif'],
-                    }
-                }
-            }
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style id="theme-custom-properties">
+        @if($headingFontType === 'custom' && !empty($customHeadingFont))
+        @font-face {
+            font-family: 'CustomHeadingFont';
+            src: url('{{ asset('storage/' . $customHeadingFont) }}');
+            font-weight: 100 900;
+            font-display: swap;
         }
-    </script>
+        @endif
 
-    <style>
-        /* Tùy chỉnh thanh cuộn */
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #c8a98d; }
-        
-        .bg-gold { background-color: #c8a98d; }
-        .text-gold { color: #c8a98d; }
-        .border-gold { border-color: #c8a98d; }
+        @if($bodyFontType === 'custom' && !empty($customBodyFont))
+        @font-face {
+            font-family: 'CustomBodyFont';
+            src: url('{{ asset('storage/' . $customBodyFont) }}');
+            font-weight: 100 900;
+            font-display: swap;
+        }
+        @endif
+
+        :root {
+            --color-primary: {{ $colorPrimary }};
+            --color-gold: {{ $colorGold }};
+            --color-dark: {{ $colorDark }};
+            --color-button: {{ $colorButton }};
+            --color-button-text: {{ $colorButtonText }};
+            --font-serif: {!! $headingFontFamily !!};
+            --font-sans: {!! $bodyFontFamily !!};
+        }
+
+        ::-webkit-scrollbar-thumb { background: {{ $colorGold }}; }
+        .bg-gold { background-color: {{ $colorGold }}; }
+        .text-gold { color: {{ $colorGold }}; }
+        .border-gold { border-color: {{ $colorGold }}; }
+
+        .btn-theme-primary {
+            background-color: {{ $colorButton }};
+            color: {{ $colorButtonText }};
+        }
     </style>
+
+    @if(!empty($settings['theme_custom_css']))
+    <style id="theme-custom-injected-css">
+        {!! $settings['theme_custom_css'] !!}
+    </style>
+    @endif
+
     @yield('styles')
 </head>
 <body class="bg-primary text-dark antialiased">
@@ -64,7 +168,6 @@
     @include('partials.footer')
 
     <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/img-comparison-slider@8/dist/index.js"></script>
     
     <script>
         // Khởi tạo hiệu ứng xuất hiện AOS

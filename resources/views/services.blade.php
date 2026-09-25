@@ -25,7 +25,7 @@
             left: 50%;
             width: 100%;
             height: 1px;
-            background: linear-gradient(90deg, #c8a98d 0%, transparent 100%);
+            background: linear-gradient(90deg, var(--color-gold) 0%, transparent 100%);
             z-index: 0;
         }
         @media (max-width: 768px) {

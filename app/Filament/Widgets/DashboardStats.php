@@ -18,8 +18,8 @@ class DashboardStats extends BaseWidget
         $pendingBookings = Booking::where('status', 'pending')->count();
 
         // 2. Lợi nhuận tháng này
-        $thuThangNay = Payment::whereMonth('payment_date', now()->month)->sum('amount');
-        $chiThangNay = Expense::whereMonth('expense_date', now()->month)->sum('amount');
+        $thuThangNay = Payment::whereYear('payment_date', now()->year)->whereMonth('payment_date', now()->month)->sum('amount');
+        $chiThangNay = Expense::whereYear('expense_date', now()->year)->whereMonth('expense_date', now()->month)->sum('amount');
         $loiNhuan = $thuThangNay - $chiThangNay;
 
         // 3. Tính công nợ (Tổng tiền của các booking KHÁC trạng thái 'Hủy' trừ đi tổng tiền đã thu)
