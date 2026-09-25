@@ -27,6 +27,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Tùy chỉnh icon thu gọn / mở rộng sidebar thành icon 3 gạch ngang
+        \Filament\Support\Facades\FilamentIcon::register([
+            'panels::sidebar.collapse-button' => 'heroicon-o-bars-3',
+            'panels::sidebar.expand-button' => 'heroicon-o-bars-3',
+        ]);
+
         // Grant all permissions to super_admin
         Gate::before(function ($user, $ability) {
             return method_exists($user, 'hasRole') && $user->hasRole('super_admin') ? true : null;
