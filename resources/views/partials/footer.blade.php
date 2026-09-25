@@ -5,18 +5,21 @@
         
         <div class="flex flex-wrap justify-center items-center gap-4 md:gap-5 mb-16">
             @if(!empty($settings['hotline']))
-                <a href="tel:{{ preg_replace('/[^0-9]/', '', $settings['hotline']) }}" class="border border-gold text-gold hover:bg-gold hover:text-dark px-7 py-3.5 rounded-full transition-all duration-300 uppercase text-xs tracking-widest font-medium inline-flex items-center justify-center gap-2.5 whitespace-nowrap shadow-sm hover:shadow-md">
-                    <i class="fas fa-phone-alt text-xs"></i> {{ $settings['hotline'] }}
+                <a href="tel:{{ preg_replace('/[^0-9]/', '', $settings['hotline']) }}" class="footer-cta-btn border border-gold text-gold hover:bg-gold hover:text-dark px-7 py-3.5 rounded-full uppercase text-xs tracking-wider font-semibold shadow-sm hover:shadow-md">
+                    <i class="fas fa-phone-alt text-xs"></i>
+                    <span>{{ $settings['hotline'] }}</span>
                 </a>
             @endif
             @if(!empty($settings['social_zalo']))
-                <a href="{{ $settings['social_zalo'] }}" target="_blank" class="bg-gold text-dark hover:bg-white hover:text-dark px-7 py-3.5 rounded-full transition-all duration-300 uppercase text-xs tracking-widest font-bold inline-flex items-center justify-center gap-2.5 whitespace-nowrap shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                    <i class="fas fa-comment-dots text-sm"></i> Nhắn tin Zalo
+                <a href="{{ $settings['social_zalo'] }}" target="_blank" class="footer-cta-btn bg-gold text-dark hover:bg-white hover:text-dark px-7 py-3.5 rounded-full uppercase text-xs tracking-wider font-bold shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                    <i class="fas fa-comment-dots text-sm"></i>
+                    <span>Nhắn tin Zalo</span>
                 </a>
             @endif
             @if(!empty($settings['email']))
-                <a href="mailto:{{ $settings['email'] }}" class="border border-white/20 text-white/80 hover:text-white hover:border-gold px-7 py-3.5 rounded-full transition-all duration-300 uppercase text-xs tracking-widest font-medium inline-flex items-center justify-center gap-2.5 whitespace-nowrap shadow-sm hover:shadow-md">
-                    <i class="fas fa-envelope text-xs"></i> {{ $settings['email'] }}
+                <a href="mailto:{{ $settings['email'] }}" class="footer-cta-btn border border-white/20 text-white/90 hover:text-white hover:border-gold px-7 py-3.5 rounded-full uppercase text-xs tracking-wider font-semibold shadow-sm hover:shadow-md">
+                    <i class="fas fa-envelope text-xs"></i>
+                    <span>{{ $settings['email'] }}</span>
                 </a>
             @endif
         </div>

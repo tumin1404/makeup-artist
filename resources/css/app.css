@@ -24,3 +24,19 @@
 .text-gold { color: #c8a98d; }
 .border-gold { border-color: #c8a98d; }
 
+.footer-cta-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.footer-cta-btn i {
+    margin-right: 0.65rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+
