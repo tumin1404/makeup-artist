@@ -162,7 +162,7 @@
                 <div class="text-center relative process-line z-10" data-aos="fade-right" data-aos-delay="300">
                     <div class="w-12 h-12 mx-auto bg-primary text-gold border border-gold rounded-full flex items-center justify-center font-serif text-xl mb-6 relative z-10">3</div>
                     <h4 class="text-lg font-serif text-dark mb-3">{{ $settings['process_step_3_title'] ?? 'Ngày Tỏa Sáng' }}</h4>
-                    <p class="font-light text-sm text-gray-600 px-4">{{ $settings['process_step_3_desc'] ?? 'Đến đúng giờ, chuẩn bị 100% dụng cụ vô trùng và thực hiện makeup chuyên nghiệp.' }}</p>
+                    <p class="font-light text-sm text-gray-600 px-4">{{ $settings['process_step_3_desc'] ?? 'Đến đúng giờ, chuẩn bị mỹ phẩm high-end chính hãng, bộ cọ vệ sinh sạch khuẩn và thực hiện makeup chuyên nghiệp tôn vinh vẻ đẹp riêng.' }}</p>
                 </div>
                 
                 <div class="text-center relative z-10" data-aos="fade-right" data-aos-delay="450">

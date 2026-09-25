@@ -544,7 +544,7 @@ class DatabaseSeeder extends Seeder
                 'key' => 'process_step_3_desc',
                 'description' => 'Quy trình Bước 3 - Mô tả ngắn',
                 'recommendation' => 'Mô tả chi tiết bước 3.',
-                'value' => 'Đến đúng giờ, chuẩn bị 100% dụng cụ vô trùng và thực hiện makeup chuyên nghiệp.',
+                'value' => 'Đến đúng giờ, chuẩn bị mỹ phẩm high-end chính hãng, bộ cọ vệ sinh sạch khuẩn và thực hiện makeup chuyên nghiệp tôn vinh vẻ đẹp riêng.',
                 'type' => 'text'
             ],
             [
