@@ -59,6 +59,18 @@ class ListSettings extends ListRecords
             'popup' => Tab::make('Popup thông báo')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('group', 'popup'))
                 ->icon('heroicon-o-megaphone'),
+            'theme' => Tab::make('Giao diện & Chủ đề')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('group', 'theme'))
+                ->icon('heroicon-o-paint-brush'),
+            'mail' => Tab::make('Email & SMTP')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('group', 'mail'))
+                ->icon('heroicon-o-envelope'),
+            'telegram' => Tab::make('Telegram Bot')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('group', 'telegram'))
+                ->icon('heroicon-o-paper-airplane'),
+            'zalo' => Tab::make('Zalo ZNS')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('group', 'zalo'))
+                ->icon('heroicon-o-chat-bubble-left-right'),
         ];
     }
 }
