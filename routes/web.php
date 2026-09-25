@@ -55,8 +55,10 @@ Route::post('/booking', [BookingController::class, 'store'])->middleware('thrott
 use App\Models\Booking;
 
 Route::get('/booking/{booking}/invoice', function (Booking $booking) {
-    $booking->load('items'); // Lấy dữ liệu các dịch vụ con
-    return view('invoice', compact('booking'));
+    $booking->load('items');
+    $config = \App\Services\InvoiceConfigService::getCurrentConfig();
+    $settings = \App\Models\Setting::pluck('value', 'key')->toArray();
+    return view('invoice', compact('booking', 'config', 'settings'));
 })->middleware(['auth', 'can:view,booking'])->name('booking.invoice');
 
 // Lưu ý: Filament tự động tạo các route như /admin/posts, /admin/services...
