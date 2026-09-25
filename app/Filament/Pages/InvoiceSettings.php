@@ -353,70 +353,51 @@ class InvoiceSettings extends Page implements HasForms
     /**
      * Nhận sự kiện kéo thả sắp xếp lại thứ tự các khối
      */
-    public function updateBlockOrder(array $newOrder): void
+    /**
+     * Nhận sự kiện kéo thả sắp xếp lại thứ tự các phần tử con
+     */
+    public function updateElementOrder(array $newOrder): void
     {
-        $this->data['block_order'] = $newOrder;
+        $this->data['elements_order'] = $newOrder;
         
         Notification::make()
-            ->title('Đã cập nhật vị trí các khối')
-            ->body('Thứ tự hiển thị trên hóa đơn đã được sắp xếp lại.')
+            ->title('Đã cập nhật vị trí phần tử')
+            ->body('Thứ tự hiển thị các nội dung trên hóa đơn đã được cập nhật.')
             ->info()
             ->send();
     }
 
     /**
-     * Đổi căn lề Trái / Giữa / Phải của một khối
+     * Đổi căn lề Trái / Giữa / Phải của một phần tử
      */
-    public function setElementAlign(string $blockId, string $align): void
+    public function setElementAlign(string $elId, string $align): void
     {
         if (!isset($this->data['elements_layout'])) {
             $this->data['elements_layout'] = InvoiceConfigService::getCurrentConfig()['elements_layout'] ?? [];
         }
-        $this->data['elements_layout'][$blockId]['align'] = $align;
+        $this->data['elements_layout'][$elId]['align'] = $align;
     }
 
     /**
-     * Đổi độ rộng Chiếm Full / Nửa cột của một khối
+     * Đổi độ rộng Chiếm Full / Nửa dòng của một phần tử
      */
-    public function setElementWidth(string $blockId, string $width): void
+    public function setElementWidth(string $elId, string $width): void
     {
         if (!isset($this->data['elements_layout'])) {
             $this->data['elements_layout'] = InvoiceConfigService::getCurrentConfig()['elements_layout'] ?? [];
         }
-        $this->data['elements_layout'][$blockId]['width'] = $width;
+        $this->data['elements_layout'][$elId]['width'] = $width;
     }
 
     /**
-     * Đổi kích cỡ To / Nhỏ của một khối
+     * Đổi kích cỡ To / Vừa / Nhỏ của một phần tử
      */
-    public function setElementSize(string $blockId, string $size): void
+    public function setElementSize(string $elId, string $size): void
     {
         if (!isset($this->data['elements_layout'])) {
             $this->data['elements_layout'] = InvoiceConfigService::getCurrentConfig()['elements_layout'] ?? [];
         }
-        $this->data['elements_layout'][$blockId]['size'] = $size;
-    }
-
-    /**
-     * Bật/Tắt một khối trực tiếp từ bản xem trước
-     */
-    public function toggleBlock(string $blockId, bool $status): void
-    {
-        $map = [
-            'seller_header' => 'show_seller_name',
-            'invoice_meta' => 'show_invoice_number',
-            'buyer_info' => 'show_buyer_name',
-            'items_table' => 'show_column_unit',
-            'summary_totals' => 'show_amount_in_words',
-            'vietqr_banking' => 'show_vietqr',
-            'notes_terms' => 'show_notes',
-            'footer_lookup' => 'show_lookup_link',
-        ];
-
-        if (isset($map[$blockId])) {
-            $field = $map[$blockId];
-            $this->data[$field] = $status;
-        }
+        $this->data['elements_layout'][$elId]['size'] = $size;
     }
 
     /**
@@ -427,9 +408,12 @@ class InvoiceSettings extends Page implements HasForms
         $state = $this->form->getState();
         $state['active_preset'] = $this->activePreset;
         
-        // Đảm bảo mảng block_order được lưu lại đầy đủ
-        if (empty($state['block_order'])) {
-            $state['block_order'] = $this->data['block_order'] ?? InvoiceConfigService::getCurrentConfig()['block_order'];
+        if (empty($state['elements_order'])) {
+            $state['elements_order'] = $this->data['elements_order'] ?? InvoiceConfigService::getCurrentConfig()['elements_order'] ?? array_keys(InvoiceConfigService::getAvailableElements());
+        }
+
+        if (!empty($this->data['elements_layout'])) {
+            $state['elements_layout'] = $this->data['elements_layout'];
         }
 
         InvoiceConfigService::saveConfig($state);
@@ -466,27 +450,34 @@ class InvoiceSettings extends Page implements HasForms
     }
 
     /**
-     * Lấy danh sách các khối theo thứ tự đã sắp xếp
+     * Lấy danh sách các phần tử theo thứ tự đã sắp xếp
      */
-    public function getOrderedBlocksProperty(): array
+    public function getOrderedElementsProperty(): array
     {
-        $available = InvoiceConfigService::getAvailableBlocks();
-        $order = $this->data['block_order'] ?? InvoiceConfigService::getCurrentConfig()['block_order'] ?? array_keys($available);
+        $available = InvoiceConfigService::getAvailableElements();
+        $order = $this->data['elements_order'] ?? InvoiceConfigService::getCurrentConfig()['elements_order'] ?? array_keys($available);
 
         $ordered = [];
-        foreach ($order as $blockId) {
-            if (isset($available[$blockId])) {
-                $ordered[$blockId] = $available[$blockId];
+        foreach ($order as $elId) {
+            if (isset($available[$elId])) {
+                $ordered[$elId] = $available[$elId];
             }
         }
 
-        // Thêm các khối chưa có trong order vào cuối
-        foreach ($available as $blockId => $block) {
-            if (!isset($ordered[$blockId])) {
-                $ordered[$blockId] = $block;
+        foreach ($available as $elId => $el) {
+            if (!isset($ordered[$elId])) {
+                $ordered[$elId] = $el;
             }
         }
 
         return $ordered;
+    }
+
+    /**
+     * Alias cho orderedElements
+     */
+    public function getOrderedBlocksProperty(): array
+    {
+        return $this->orderedElements;
     }
 }
