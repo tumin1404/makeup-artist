@@ -27,6 +27,26 @@ class Setting extends Model
         return self::where('key', $key)->value('value') ?? $default;
     }
 
+    /**
+     * Hàm hỗ trợ lưu/cập nhật nhanh giá trị theo Key
+     * Ví dụ: Setting::set('invoice_custom_config', '...')
+     */
+    public static function set($key, $value, $group = 'general', $type = 'text', $description = null)
+    {
+        $setting = self::updateOrCreate(
+            ['key' => $key],
+            [
+                'value' => is_array($value) ? json_encode($value, JSON_UNESCAPED_UNICODE) : $value,
+                'group' => $group,
+                'type' => $type,
+                'description' => $description ?? $key,
+            ]
+        );
+        Cache::forget('site_settings');
+        Cache::forget('settings_all');
+        return (bool) $setting;
+    }
+
     protected static function booted()
     {
         static::saved(function ($model) {
