@@ -12,8 +12,28 @@
         .masonry-grid { column-count: 1; column-gap: 1.5rem; }
         @media (min-width: 640px) { .masonry-grid { column-count: 2; } }
         @media (min-width: 1024px) { .masonry-grid { column-count: 3; } }
-        .masonry-item { break-inside: avoid; margin-bottom: 1.5rem; transition: all 0.4s ease; }
+        .masonry-item { break-inside: avoid; margin-bottom: 1.5rem; transition: opacity 0.3s ease, transform 0.3s ease; }
         .gallery-overlay { background: linear-gradient(to top, rgba(62, 47, 47, 0.9) 0%, rgba(62, 47, 47, 0) 60%); }
+        
+        .filter-btn {
+            cursor: pointer;
+            transition: all 0.25s ease;
+            background-color: transparent;
+            color: var(--color-dark, #3e2f2f);
+            border: 1px solid rgba(62, 47, 47, 0.15);
+            user-select: none;
+        }
+        .filter-btn:hover {
+            color: var(--color-gold, #c8a98d);
+            background-color: #ffffff;
+            border-color: var(--color-gold, #c8a98d);
+        }
+        .filter-btn.active {
+            background-color: var(--color-dark, #3e2f2f) !important;
+            color: #ffffff !important;
+            border-color: var(--color-dark, #3e2f2f) !important;
+            box-shadow: 0 4px 14px rgba(62, 47, 47, 0.2);
+        }
     </style>
 @endsection
 
@@ -35,11 +55,11 @@
     </section>
 
     <section class="py-12 px-6 max-w-7xl mx-auto" data-aos="fade-up">
-        <div class="flex flex-wrap justify-center gap-4 md:gap-8 border-b border-dark/10 pb-6">
-            <button class="filter-btn active bg-dark text-white px-6 py-2 rounded-full text-sm uppercase shadow-md" data-filter="all">Tất cả</button>
+        <div class="flex flex-wrap justify-center gap-3 md:gap-4 border-b border-dark/10 pb-6">
+            <button type="button" class="filter-btn active px-6 py-2 rounded-full text-sm uppercase font-medium tracking-wide shadow-sm" data-filter="all">Tất cả</button>
             
             @foreach($portfolioCategories as $category)
-                <button class="filter-btn text-dark hover:text-gold hover:bg-white px-6 py-2 rounded-full text-sm uppercase transition-all" data-filter="{{ $category->slug }}">
+                <button type="button" class="filter-btn px-6 py-2 rounded-full text-sm uppercase font-medium tracking-wide transition-all" data-filter="{{ $category->slug }}">
                     {{ $category->name }}
                 </button>
             @endforeach
@@ -49,7 +69,7 @@
     <section class="pb-32 px-6 max-w-7xl mx-auto min-h-screen">
         <div class="masonry-grid" id="gallery-container">
             @foreach($portfolios as $item)
-                {{-- Thay đổi 1: Lấy slug của danh mục làm data-category để phục vụ chức năng lọc ảnh (nếu có) --}}
+                {{-- Lấy slug của danh mục làm data-category để phục vụ chức năng lọc ảnh --}}
                 <div class="masonry-item opacity-100" data-category="{{ $item->category->slug ?? 'all' }}" data-aos="fade-up">
                     <div class="group block relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl bg-gray-100">
                         @if($item->type === 'image')
@@ -67,7 +87,6 @@
 
                         <div class="gallery-overlay absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-6 pointer-events-none">
                             <span class="text-gold text-[10px] tracking-widest uppercase mb-1">
-                                {{-- Thay đổi 2: Hiển thị tên danh mục trực tiếp từ Database --}}
                                 {{ $item->category->name ?? 'Gallery' }}
                             </span>
                             <h3 class="text-white font-serif text-xl">{{ $item->title ?? ($settings['site_name'] ?? '') }}</h3>
@@ -80,29 +99,54 @@
 @endsection
 
 @section('scripts')
-    <script src="https://cdn.jsdelivr.net/gh/mcstudios/glightbox/dist/js/glightbox.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
     <script>
-        const lightbox = GLightbox({ selector: '.glightbox' });
-        const filterButtons = document.querySelectorAll('.filter-btn');
-        const galleryItems = document.querySelectorAll('.masonry-item');
+        document.addEventListener('DOMContentLoaded', function () {
+            let lightbox = null;
+            if (typeof GLightbox !== 'undefined') {
+                try {
+                    lightbox = GLightbox({ selector: '.glightbox' });
+                } catch (e) {
+                    console.warn('GLightbox init error:', e);
+                }
+            }
 
-        filterButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                filterButtons.forEach(btn => {
-                    btn.classList.remove('bg-dark', 'text-white', 'shadow-md');
-                    btn.classList.add('text-dark', 'hover:text-gold', 'hover:bg-white');
-                });
-                button.classList.remove('text-dark', 'hover:text-gold', 'hover:bg-white');
-                button.classList.add('bg-dark', 'text-white', 'shadow-md');
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            const galleryItems = document.querySelectorAll('.masonry-item');
 
-                const filterValue = button.getAttribute('data-filter');
-                galleryItems.forEach(item => {
-                    if (filterValue === 'all' || item.getAttribute('data-category') === filterValue) {
-                        item.style.display = 'block';
-                        setTimeout(() => item.classList.remove('opacity-0', 'scale-95'), 50);
-                    } else {
-                        item.classList.add('opacity-0', 'scale-95');
-                        setTimeout(() => item.style.display = 'none', 400);
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function (e) {
+                    e.preventDefault();
+
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+
+                    const filterValue = this.getAttribute('data-filter');
+
+                    galleryItems.forEach(item => {
+                        const itemCategory = item.getAttribute('data-category');
+                        if (filterValue === 'all' || itemCategory === filterValue) {
+                            item.style.display = 'block';
+                            requestAnimationFrame(() => {
+                                item.style.opacity = '1';
+                                item.style.transform = 'scale(1)';
+                            });
+                        } else {
+                            item.style.opacity = '0';
+                            item.style.transform = 'scale(0.95)';
+                            setTimeout(() => {
+                                if (item.style.opacity === '0') {
+                                    item.style.display = 'none';
+                                }
+                            }, 250);
+                        }
+                    });
+
+                    if (lightbox && typeof lightbox.reload === 'function') {
+                        lightbox.reload();
+                    }
+                    if (window.AOS && typeof window.AOS.refresh === 'function') {
+                        window.AOS.refresh();
                     }
                 });
             });
