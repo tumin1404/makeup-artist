@@ -351,53 +351,174 @@ class InvoiceSettings extends Page implements HasForms
     }
 
     /**
-     * Nhận sự kiện kéo thả sắp xếp lại thứ tự các khối
+     * Cập nhật thứ tự các Khối (Blocks) từ sự kiện kéo thả
      */
-    /**
-     * Nhận sự kiện kéo thả sắp xếp lại thứ tự các phần tử con
-     */
-    public function updateElementOrder(array $newOrder): void
+    public function updateBlockOrder(array $newBlockOrder): void
     {
-        $this->data['elements_order'] = $newOrder;
+        $this->data['blocks_order'] = $newBlockOrder;
         
         Notification::make()
-            ->title('Đã cập nhật vị trí phần tử')
-            ->body('Thứ tự hiển thị các nội dung trên hóa đơn đã được cập nhật.')
+            ->title('Đã cập nhật vị trí khối')
+            ->body('Thứ tự các khối trên hóa đơn đã được cập nhật.')
             ->info()
             ->send();
     }
 
     /**
-     * Đổi căn lề Trái / Giữa / Phải của một phần tử
+     * Cập nhật thứ tự các Phần tử con (Elements) bên trong một Khối cụ thể
      */
-    public function setElementAlign(string $elId, string $align): void
+    public function updateElementOrderInBlock(string $blockId, array $newElementOrder): void
     {
-        if (!isset($this->data['elements_layout'])) {
-            $this->data['elements_layout'] = InvoiceConfigService::getCurrentConfig()['elements_layout'] ?? [];
+        if (!isset($this->data['blocks_structure'])) {
+            $this->data['blocks_structure'] = InvoiceConfigService::getCurrentConfig()['blocks_structure'] ?? InvoiceConfigService::getDefaultBlocksStructure();
         }
-        $this->data['elements_layout'][$elId]['align'] = $align;
+
+        if (isset($this->data['blocks_structure'][$blockId])) {
+            $this->data['blocks_structure'][$blockId]['elements_order'] = $newElementOrder;
+            
+            Notification::make()
+                ->title('Đã đổi thứ tự phần tử')
+                ->body('Thứ tự phần tử trong khối ' . ($this->data['blocks_structure'][$blockId]['name'] ?? '') . ' đã được cập nhật.')
+                ->info()
+                ->send();
+        }
     }
 
     /**
-     * Đổi độ rộng Chiếm Full / Nửa dòng của một phần tử
+     * Di chuyển một phần tử con LÊN TRÊN trong khối
      */
-    public function setElementWidth(string $elId, string $width): void
+    public function moveElementUp(string $blockId, string $elementId): void
     {
-        if (!isset($this->data['elements_layout'])) {
-            $this->data['elements_layout'] = InvoiceConfigService::getCurrentConfig()['elements_layout'] ?? [];
+        $this->ensureBlocksStructure();
+        $order = $this->data['blocks_structure'][$blockId]['elements_order'] ?? [];
+        $index = array_search($elementId, $order);
+        
+        if ($index !== false && $index > 0) {
+            $temp = $order[$index - 1];
+            $order[$index - 1] = $order[$index];
+            $order[$index] = $temp;
+            $this->data['blocks_structure'][$blockId]['elements_order'] = array_values($order);
         }
-        $this->data['elements_layout'][$elId]['width'] = $width;
     }
 
     /**
-     * Đổi kích cỡ To / Vừa / Nhỏ của một phần tử
+     * Di chuyển một phần tử con XUỐNG DƯỚI trong khối
      */
-    public function setElementSize(string $elId, string $size): void
+    public function moveElementDown(string $blockId, string $elementId): void
     {
-        if (!isset($this->data['elements_layout'])) {
-            $this->data['elements_layout'] = InvoiceConfigService::getCurrentConfig()['elements_layout'] ?? [];
+        $this->ensureBlocksStructure();
+        $order = $this->data['blocks_structure'][$blockId]['elements_order'] ?? [];
+        $index = array_search($elementId, $order);
+        
+        if ($index !== false && $index < count($order) - 1) {
+            $temp = $order[$index + 1];
+            $order[$index + 1] = $order[$index];
+            $order[$index] = $temp;
+            $this->data['blocks_structure'][$blockId]['elements_order'] = array_values($order);
         }
-        $this->data['elements_layout'][$elId]['size'] = $size;
+    }
+
+    /**
+     * Di chuyển một Khối LÊN TRÊN
+     */
+    public function moveBlockUp(string $blockId): void
+    {
+        $this->ensureBlocksStructure();
+        $order = $this->data['blocks_order'] ?? array_keys($this->data['blocks_structure']);
+        $index = array_search($blockId, $order);
+        
+        if ($index !== false && $index > 0) {
+            $temp = $order[$index - 1];
+            $order[$index - 1] = $order[$index];
+            $order[$index] = $temp;
+            $this->data['blocks_order'] = array_values($order);
+        }
+    }
+
+    /**
+     * Di chuyển một Khối XUỐNG DƯỚI
+     */
+    public function moveBlockDown(string $blockId): void
+    {
+        $this->ensureBlocksStructure();
+        $order = $this->data['blocks_order'] ?? array_keys($this->data['blocks_structure']);
+        $index = array_search($blockId, $order);
+        
+        if ($index !== false && $index < count($order) - 1) {
+            $temp = $order[$index + 1];
+            $order[$index + 1] = $order[$index];
+            $order[$index] = $temp;
+            $this->data['blocks_order'] = array_values($order);
+        }
+    }
+
+    /**
+     * Đổi độ rộng của Khối (Nửa dòng 50% / Cả dòng 100%)
+     */
+    public function setBlockWidth(string $blockId, string $width): void
+    {
+        $this->ensureBlocksStructure();
+        if (isset($this->data['blocks_structure'][$blockId])) {
+            $this->data['blocks_structure'][$blockId]['width'] = $width;
+        }
+    }
+
+    /**
+     * Đổi căn lề của Khối (Trái / Giữa / Phải)
+     */
+    public function setBlockAlign(string $blockId, string $align): void
+    {
+        $this->ensureBlocksStructure();
+        if (isset($this->data['blocks_structure'][$blockId])) {
+            $this->data['blocks_structure'][$blockId]['align'] = $align;
+        }
+    }
+
+    /**
+     * Đổi căn lề Trái / Giữa / Phải của một phần tử con
+     */
+    public function setElementAlign(string $blockId, string $elementId, string $align): void
+    {
+        $this->ensureBlocksStructure();
+        if (isset($this->data['blocks_structure'][$blockId]['elements'][$elementId])) {
+            $this->data['blocks_structure'][$blockId]['elements'][$elementId]['align'] = $align;
+        }
+    }
+
+    /**
+     * Đổi kích cỡ To / Vừa / Nhỏ của một phần tử con
+     */
+    public function setElementSize(string $blockId, string $elementId, string $size): void
+    {
+        $this->ensureBlocksStructure();
+        if (isset($this->data['blocks_structure'][$blockId]['elements'][$elementId])) {
+            $this->data['blocks_structure'][$blockId]['elements'][$elementId]['size'] = $size;
+        }
+    }
+
+    /**
+     * Bật / Tắt hiển thị của một phần tử con
+     */
+    public function toggleElementVisibility(string $blockId, string $elementId): void
+    {
+        $this->ensureBlocksStructure();
+        if (isset($this->data['blocks_structure'][$blockId]['elements'][$elementId])) {
+            $curr = $this->data['blocks_structure'][$blockId]['elements'][$elementId]['visible'] ?? true;
+            $this->data['blocks_structure'][$blockId]['elements'][$elementId]['visible'] = !$curr;
+        }
+    }
+
+    /**
+     * Đảm bảo state blocks_structure và blocks_order đã được khởi tạo
+     */
+    private function ensureBlocksStructure(): void
+    {
+        if (!isset($this->data['blocks_structure'])) {
+            $this->data['blocks_structure'] = InvoiceConfigService::getCurrentConfig()['blocks_structure'] ?? InvoiceConfigService::getDefaultBlocksStructure();
+        }
+        if (!isset($this->data['blocks_order'])) {
+            $this->data['blocks_order'] = InvoiceConfigService::getCurrentConfig()['blocks_order'] ?? array_keys($this->data['blocks_structure']);
+        }
     }
 
     /**
@@ -408,13 +529,9 @@ class InvoiceSettings extends Page implements HasForms
         $state = $this->form->getState();
         $state['active_preset'] = $this->activePreset;
         
-        if (empty($state['elements_order'])) {
-            $state['elements_order'] = $this->data['elements_order'] ?? InvoiceConfigService::getCurrentConfig()['elements_order'] ?? array_keys(InvoiceConfigService::getAvailableElements());
-        }
-
-        if (!empty($this->data['elements_layout'])) {
-            $state['elements_layout'] = $this->data['elements_layout'];
-        }
+        $this->ensureBlocksStructure();
+        $state['blocks_order'] = $this->data['blocks_order'];
+        $state['blocks_structure'] = $this->data['blocks_structure'];
 
         InvoiceConfigService::saveConfig($state);
         Cache::forget('settings_all');
@@ -450,34 +567,37 @@ class InvoiceSettings extends Page implements HasForms
     }
 
     /**
-     * Lấy danh sách các phần tử theo thứ tự đã sắp xếp
+     * Lấy danh sách các Khối và Phần tử con theo đúng thứ tự đã sắp xếp
      */
-    public function getOrderedElementsProperty(): array
+    public function getOrderedBlocksProperty(): array
     {
-        $available = InvoiceConfigService::getAvailableElements();
-        $order = $this->data['elements_order'] ?? InvoiceConfigService::getCurrentConfig()['elements_order'] ?? array_keys($available);
+        $config = $this->previewConfig;
+        $structure = $config['blocks_structure'] ?? InvoiceConfigService::getDefaultBlocksStructure();
+        $order = $config['blocks_order'] ?? array_keys($structure);
 
         $ordered = [];
-        foreach ($order as $elId) {
-            if (isset($available[$elId])) {
-                $ordered[$elId] = $available[$elId];
-            }
-        }
-
-        foreach ($available as $elId => $el) {
-            if (!isset($ordered[$elId])) {
-                $ordered[$elId] = $el;
+        foreach ($order as $bId) {
+            if (isset($structure[$bId])) {
+                $block = $structure[$bId];
+                // Sắp xếp các phần tử con bên trong khối
+                $elOrder = $block['elements_order'] ?? array_keys($block['elements'] ?? []);
+                $orderedElements = [];
+                foreach ($elOrder as $eId) {
+                    if (isset($block['elements'][$eId])) {
+                        $orderedElements[$eId] = $block['elements'][$eId];
+                    }
+                }
+                foreach (($block['elements'] ?? []) as $eId => $eVal) {
+                    if (!isset($orderedElements[$eId])) {
+                        $orderedElements[$eId] = $eVal;
+                    }
+                }
+                $block['ordered_elements'] = $orderedElements;
+                $ordered[$bId] = $block;
             }
         }
 
         return $ordered;
     }
-
-    /**
-     * Alias cho orderedElements
-     */
-    public function getOrderedBlocksProperty(): array
-    {
-        return $this->orderedElements;
-    }
 }
+

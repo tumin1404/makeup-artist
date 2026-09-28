@@ -9,154 +9,121 @@ class InvoiceConfigService
     const SETTING_KEY = 'invoice_custom_config';
 
     /**
-     * Danh sách các phần tử / nội dung cấu hình chi tiết (Granular Elements)
+     * Cấu trúc Khối (Blocks) và Phần tử con (Elements) 2 tầng chuẩn
      */
-    public static function getAvailableElements(): array
+    public static function getDefaultBlocksStructure(): array
     {
         return [
-            'seller_name_info' => [
-                'id' => 'seller_name_info',
-                'name' => 'Tên Studio & Hotline',
-                'category' => 'Bên bán',
-                'icon' => 'heroicon-o-building-storefront',
-                'default_align' => 'left',
-                'default_width' => 'half',
-                'default_size' => 'md',
+            'block_seller' => [
+                'id' => 'block_seller',
+                'name' => 'Khối Thông Tin Studio / Người Bán',
+                'width' => 'half',
+                'align' => 'left',
+                'elements_order' => ['seller_logo', 'seller_name', 'seller_phone', 'seller_address', 'seller_tax', 'seller_bank'],
+                'elements' => [
+                    'seller_logo' => ['id' => 'seller_logo', 'name' => 'Logo Studio', 'align' => 'left', 'size' => 'md', 'visible' => true],
+                    'seller_name' => ['id' => 'seller_name', 'name' => 'Tên Studio / Đơn vị', 'align' => 'left', 'size' => 'md', 'visible' => true],
+                    'seller_phone' => ['id' => 'seller_phone', 'name' => 'Hotline / Số điện thoại', 'align' => 'left', 'size' => 'sm', 'visible' => true],
+                    'seller_address' => ['id' => 'seller_address', 'name' => 'Địa chỉ cơ sở', 'align' => 'left', 'size' => 'sm', 'visible' => true],
+                    'seller_tax' => ['id' => 'seller_tax', 'name' => 'Mã số thuế bên bán', 'align' => 'left', 'size' => 'sm', 'visible' => false],
+                    'seller_bank' => ['id' => 'seller_bank', 'name' => 'STK & Ngân hàng', 'align' => 'left', 'size' => 'sm', 'visible' => true],
+                ],
             ],
-            'seller_logo' => [
-                'id' => 'seller_logo',
-                'name' => 'Logo Thương Hiệu',
-                'category' => 'Bên bán',
-                'icon' => 'heroicon-o-photo',
-                'default_align' => 'right',
-                'default_width' => 'half',
-                'default_size' => 'md',
+            'block_invoice_meta' => [
+                'id' => 'block_invoice_meta',
+                'name' => 'Khối Tiêu Đề & Thông Tin Hóa Đơn',
+                'width' => 'half',
+                'align' => 'right',
+                'elements_order' => ['invoice_title', 'invoice_subtitle', 'invoice_number', 'invoice_date', 'invoice_symbol', 'invoice_cqt'],
+                'elements' => [
+                    'invoice_title' => ['id' => 'invoice_title', 'name' => 'Tiêu đề hóa đơn', 'align' => 'right', 'size' => 'lg', 'visible' => true],
+                    'invoice_subtitle' => ['id' => 'invoice_subtitle', 'name' => 'Phụ đề / Mẫu biểu', 'align' => 'right', 'size' => 'sm', 'visible' => true],
+                    'invoice_number' => ['id' => 'invoice_number', 'name' => 'Số hóa đơn (#00012)', 'align' => 'right', 'size' => 'sm', 'visible' => true],
+                    'invoice_date' => ['id' => 'invoice_date', 'name' => 'Ngày lập hóa đơn', 'align' => 'right', 'size' => 'sm', 'visible' => true],
+                    'invoice_symbol' => ['id' => 'invoice_symbol', 'name' => 'Ký hiệu mẫu số HĐ', 'align' => 'right', 'size' => 'sm', 'visible' => false],
+                    'invoice_cqt' => ['id' => 'invoice_cqt', 'name' => 'Mã cơ quan thuế', 'align' => 'right', 'size' => 'sm', 'visible' => false],
+                ],
             ],
-            'seller_address_tax' => [
-                'id' => 'seller_address_tax',
-                'name' => 'Địa chỉ, MST & STK Bên Bán',
-                'category' => 'Bên bán',
-                'icon' => 'heroicon-o-map-pin',
-                'default_align' => 'left',
-                'default_width' => 'full',
-                'default_size' => 'sm',
+            'block_buyer' => [
+                'id' => 'block_buyer',
+                'name' => 'Khối Thông Tin Khách Hàng (Bên Mua)',
+                'width' => 'full',
+                'align' => 'left',
+                'elements_order' => ['buyer_name', 'buyer_phone', 'buyer_address', 'buyer_company', 'buyer_tax', 'buyer_payment'],
+                'elements' => [
+                    'buyer_name' => ['id' => 'buyer_name', 'name' => 'Họ tên khách hàng', 'align' => 'left', 'size' => 'md', 'visible' => true],
+                    'buyer_phone' => ['id' => 'buyer_phone', 'name' => 'Số điện thoại khách', 'align' => 'left', 'size' => 'md', 'visible' => true],
+                    'buyer_address' => ['id' => 'buyer_address', 'name' => 'Địa chỉ khách hàng', 'align' => 'left', 'size' => 'md', 'visible' => true],
+                    'buyer_company' => ['id' => 'buyer_company', 'name' => 'Tên công ty / Đơn vị mua', 'align' => 'left', 'size' => 'md', 'visible' => false],
+                    'buyer_tax' => ['id' => 'buyer_tax', 'name' => 'Mã số thuế khách hàng', 'align' => 'left', 'size' => 'md', 'visible' => false],
+                    'buyer_payment' => ['id' => 'buyer_payment', 'name' => 'Hình thức thanh toán (TM/CK)', 'align' => 'left', 'size' => 'md', 'visible' => true],
+                ],
             ],
-            'invoice_title' => [
-                'id' => 'invoice_title',
-                'name' => 'Tiêu Đề Hóa Đơn',
-                'category' => 'Tiêu đề',
-                'icon' => 'heroicon-o-document-text',
-                'default_align' => 'center',
-                'default_width' => 'full',
-                'default_size' => 'lg',
+            'block_items_table' => [
+                'id' => 'block_items_table',
+                'name' => 'Khối Bảng Kê Chi Tiết Dịch Vụ',
+                'width' => 'full',
+                'align' => 'left',
+                'elements_order' => ['items_table_content'],
+                'elements' => [
+                    'items_table_content' => ['id' => 'items_table_content', 'name' => 'Bảng danh sách dịch vụ / sản phẩm', 'align' => 'left', 'size' => 'md', 'visible' => true],
+                ],
             ],
-            'invoice_meta' => [
-                'id' => 'invoice_meta',
-                'name' => 'Số HĐ, Ký Hiệu & Ngày Lập',
-                'category' => 'Tiêu đề',
-                'icon' => 'heroicon-o-calendar',
-                'default_align' => 'center',
-                'default_width' => 'full',
-                'default_size' => 'sm',
+            'block_vietqr' => [
+                'id' => 'block_vietqr',
+                'name' => 'Khối VietQR Chuyển Khoản',
+                'width' => 'half',
+                'align' => 'left',
+                'elements_order' => ['vietqr_box'],
+                'elements' => [
+                    'vietqr_box' => ['id' => 'vietqr_box', 'name' => 'Mã QR & Thông tin tài khoản', 'align' => 'left', 'size' => 'md', 'visible' => true],
+                ],
             ],
-            'buyer_personal' => [
-                'id' => 'buyer_personal',
-                'name' => 'Khách Hàng & Số Điện Thoại',
-                'category' => 'Khách hàng',
-                'icon' => 'heroicon-o-user',
-                'default_align' => 'left',
-                'default_width' => 'half',
-                'default_size' => 'md',
+            'block_totals' => [
+                'id' => 'block_totals',
+                'name' => 'Khối Tổng Kết Tiền & Đặt Cọc',
+                'width' => 'half',
+                'align' => 'right',
+                'elements_order' => ['subtotal_row', 'tax_row', 'deposit_row', 'remaining_row', 'words_row'],
+                'elements' => [
+                    'subtotal_row' => ['id' => 'subtotal_row', 'name' => 'Tổng tiền hàng hóa', 'align' => 'right', 'size' => 'md', 'visible' => true],
+                    'tax_row' => ['id' => 'tax_row', 'name' => 'Thuế GTGT (VAT)', 'align' => 'right', 'size' => 'sm', 'visible' => false],
+                    'deposit_row' => ['id' => 'deposit_row', 'name' => 'Đã đặt cọc', 'align' => 'right', 'size' => 'sm', 'visible' => true],
+                    'remaining_row' => ['id' => 'remaining_row', 'name' => 'Còn lại phải thu', 'align' => 'right', 'size' => 'md', 'visible' => true],
+                    'words_row' => ['id' => 'words_row', 'name' => 'Số tiền viết bằng chữ', 'align' => 'left', 'size' => 'sm', 'visible' => true],
+                ],
             ],
-            'buyer_company_tax' => [
-                'id' => 'buyer_company_tax',
-                'name' => 'Đơn Vị & Mã Số Thuế Khách',
-                'category' => 'Khách hàng',
-                'icon' => 'heroicon-o-briefcase',
-                'default_align' => 'left',
-                'default_width' => 'half',
-                'default_size' => 'md',
+            'block_notes' => [
+                'id' => 'block_notes',
+                'name' => 'Khối Ghi Chú, Lưu Ý & Lời Cảm Ơn',
+                'width' => 'full',
+                'align' => 'left',
+                'elements_order' => ['notes_text', 'thank_you_text'],
+                'elements' => [
+                    'notes_text' => ['id' => 'notes_text', 'name' => 'Nội dung ghi chú / Lưu ý', 'align' => 'left', 'size' => 'sm', 'visible' => true],
+                    'thank_you_text' => ['id' => 'thank_you_text', 'name' => 'Lời cảm ơn chân trang', 'align' => 'center', 'size' => 'sm', 'visible' => true],
+                ],
             ],
-            'buyer_address_payment' => [
-                'id' => 'buyer_address_payment',
-                'name' => 'Địa Chỉ & Hình Thức Thanh Toán',
-                'category' => 'Khách hàng',
-                'icon' => 'heroicon-o-credit-card',
-                'default_align' => 'left',
-                'default_width' => 'full',
-                'default_size' => 'md',
+            'block_signatures' => [
+                'id' => 'block_signatures',
+                'name' => 'Khối Chữ Ký Trách Nhiệm',
+                'width' => 'full',
+                'align' => 'center',
+                'elements_order' => ['signature_customer_part', 'signature_creator_part'],
+                'elements' => [
+                    'signature_customer_part' => ['id' => 'signature_customer_part', 'name' => 'Chữ ký Khách hàng', 'align' => 'center', 'size' => 'md', 'visible' => true],
+                    'signature_creator_part' => ['id' => 'signature_creator_part', 'name' => 'Chữ ký Người lập phiếu / Studio', 'align' => 'center', 'size' => 'md', 'visible' => true],
+                ],
             ],
-            'items_table' => [
-                'id' => 'items_table',
-                'name' => 'Bảng Kê Chi Tiết Dịch Vụ / Hàng Hóa',
-                'category' => 'Bảng giá',
-                'icon' => 'heroicon-o-table-cells',
-                'default_align' => 'left',
-                'default_width' => 'full',
-                'default_size' => 'md',
-            ],
-            'vietqr_banking' => [
-                'id' => 'vietqr_banking',
-                'name' => 'Khung VietQR Chuyển Khoản',
-                'category' => 'Thanh toán',
-                'icon' => 'heroicon-o-qr-code',
-                'default_align' => 'left',
-                'default_width' => 'half',
-                'default_size' => 'md',
-            ],
-            'summary_totals' => [
-                'id' => 'summary_totals',
-                'name' => 'Tổng Tiền, Tiền Cọc & Thuế VAT',
-                'category' => 'Thanh toán',
-                'icon' => 'heroicon-o-calculator',
-                'default_align' => 'right',
-                'default_width' => 'half',
-                'default_size' => 'md',
-            ],
-            'summary_words' => [
-                'id' => 'summary_words',
-                'name' => 'Số Tiền Viết Bằng Chữ',
-                'category' => 'Thanh toán',
-                'icon' => 'heroicon-o-pencil',
-                'default_align' => 'left',
-                'default_width' => 'full',
-                'default_size' => 'sm',
-            ],
-            'notes_terms' => [
-                'id' => 'notes_terms',
-                'name' => 'Ghi Chú, Lưu Ý & Lời Cảm Ơn',
-                'category' => 'Ghi chú',
-                'icon' => 'heroicon-o-chat-bubble-left-ellipsis',
-                'default_align' => 'left',
-                'default_width' => 'full',
-                'default_size' => 'sm',
-            ],
-            'signature_customer' => [
-                'id' => 'signature_customer',
-                'name' => 'Chữ Ký Khách Hàng',
-                'category' => 'Chữ ký',
-                'icon' => 'heroicon-o-pencil-square',
-                'default_align' => 'center',
-                'default_width' => 'half',
-                'default_size' => 'md',
-            ],
-            'signature_creator' => [
-                'id' => 'signature_creator',
-                'name' => 'Chữ Ký Người Lập / Dấu Điện Tử',
-                'category' => 'Chữ ký',
-                'icon' => 'heroicon-o-check-badge',
-                'default_align' => 'center',
-                'default_width' => 'half',
-                'default_size' => 'md',
-            ],
-            'footer_lookup' => [
-                'id' => 'footer_lookup',
-                'name' => 'Link Tra Cứu Hóa Đơn & Footer',
-                'category' => 'Chân trang',
-                'icon' => 'heroicon-o-globe-alt',
-                'default_align' => 'center',
-                'default_width' => 'full',
-                'default_size' => 'sm',
+            'block_lookup' => [
+                'id' => 'block_lookup',
+                'name' => 'Khối Tra Cứu Hóa Đơn Điện Tử',
+                'width' => 'full',
+                'align' => 'center',
+                'elements_order' => ['lookup_content'],
+                'elements' => [
+                    'lookup_content' => ['id' => 'lookup_content', 'name' => 'Link tra cứu HĐĐT & Mã bảo mật', 'align' => 'center', 'size' => 'sm', 'visible' => false],
+                ],
             ],
         ];
     }
@@ -166,24 +133,7 @@ class InvoiceConfigService
      */
     public static function getPresets(): array
     {
-        $defaultElements = [
-            'seller_name_info' => ['align' => 'left', 'width' => 'half', 'size' => 'md'],
-            'seller_logo' => ['align' => 'right', 'width' => 'half', 'size' => 'md'],
-            'seller_address_tax' => ['align' => 'left', 'width' => 'full', 'size' => 'sm'],
-            'invoice_title' => ['align' => 'center', 'width' => 'full', 'size' => 'lg'],
-            'invoice_meta' => ['align' => 'center', 'width' => 'full', 'size' => 'sm'],
-            'buyer_personal' => ['align' => 'left', 'width' => 'half', 'size' => 'md'],
-            'buyer_company_tax' => ['align' => 'left', 'width' => 'half', 'size' => 'md'],
-            'buyer_address_payment' => ['align' => 'left', 'width' => 'full', 'size' => 'md'],
-            'items_table' => ['align' => 'left', 'width' => 'full', 'size' => 'md'],
-            'vietqr_banking' => ['align' => 'left', 'width' => 'half', 'size' => 'md'],
-            'summary_totals' => ['align' => 'right', 'width' => 'half', 'size' => 'md'],
-            'summary_words' => ['align' => 'left', 'width' => 'full', 'size' => 'sm'],
-            'notes_terms' => ['align' => 'left', 'width' => 'full', 'size' => 'sm'],
-            'signature_customer' => ['align' => 'center', 'width' => 'half', 'size' => 'md'],
-            'signature_creator' => ['align' => 'center', 'width' => 'half', 'size' => 'md'],
-            'footer_lookup' => ['align' => 'center', 'width' => 'full', 'size' => 'sm'],
-        ];
+        $defaultBlocks = self::getDefaultBlocksStructure();
 
         return [
             'luxury_service' => [
@@ -233,8 +183,8 @@ class InvoiceConfigService
                     'signature_type' => 'two_parties',
                     'show_lookup_link' => false,
                     'lookup_url' => '',
-                    'elements_layout' => $defaultElements,
-                    'elements_order' => array_keys($defaultElements),
+                    'blocks_structure' => $defaultBlocks,
+                    'blocks_order' => array_keys($defaultBlocks),
                 ]
             ],
             'retail_pos' => [
@@ -284,8 +234,8 @@ class InvoiceConfigService
                     'signature_type' => 'two_parties',
                     'show_lookup_link' => false,
                     'lookup_url' => '',
-                    'elements_layout' => $defaultElements,
-                    'elements_order' => array_keys($defaultElements),
+                    'blocks_structure' => $defaultBlocks,
+                    'blocks_order' => array_keys($defaultBlocks),
                 ]
             ],
             'electronic_vat' => [
@@ -335,8 +285,8 @@ class InvoiceConfigService
                     'signature_type' => 'digital_stamp',
                     'show_lookup_link' => true,
                     'lookup_url' => 'https://tracuu.hoadondientu.gdt.gov.vn',
-                    'elements_layout' => $defaultElements,
-                    'elements_order' => array_keys($defaultElements),
+                    'blocks_structure' => $defaultBlocks,
+                    'blocks_order' => array_keys($defaultBlocks),
                 ]
             ],
             'inventory_voucher' => [
@@ -386,8 +336,8 @@ class InvoiceConfigService
                     'signature_type' => 'five_parties',
                     'show_lookup_link' => false,
                     'lookup_url' => '',
-                    'elements_layout' => $defaultElements,
-                    'elements_order' => array_keys($defaultElements),
+                    'blocks_structure' => $defaultBlocks,
+                    'blocks_order' => array_keys($defaultBlocks),
                 ]
             ],
         ];
@@ -411,6 +361,33 @@ class InvoiceConfigService
             return $default;
         }
 
+        // Đảm bảo cấu trúc blocks_structure luôn đầy đủ
+        $defaultBlocks = self::getDefaultBlocksStructure();
+        if (empty($decoded['blocks_structure'])) {
+            $decoded['blocks_structure'] = $defaultBlocks;
+        } else {
+            // Merge các block mới nếu có
+            foreach ($defaultBlocks as $bId => $bVal) {
+                if (!isset($decoded['blocks_structure'][$bId])) {
+                    $decoded['blocks_structure'][$bId] = $bVal;
+                } else {
+                    // Merge elements
+                    foreach ($bVal['elements'] as $eId => $eVal) {
+                        if (!isset($decoded['blocks_structure'][$bId]['elements'][$eId])) {
+                            $decoded['blocks_structure'][$bId]['elements'][$eId] = $eVal;
+                        }
+                    }
+                    if (empty($decoded['blocks_structure'][$bId]['elements_order'])) {
+                        $decoded['blocks_structure'][$bId]['elements_order'] = $bVal['elements_order'];
+                    }
+                }
+            }
+        }
+
+        if (empty($decoded['blocks_order'])) {
+            $decoded['blocks_order'] = array_keys($defaultBlocks);
+        }
+
         return array_merge($default, $decoded);
     }
 
@@ -419,6 +396,6 @@ class InvoiceConfigService
      */
     public static function saveConfig(array $config): bool
     {
-        return Setting::set(self::SETTING_KEY, json_encode($config, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), 'banking', 'text', 'Cấu hình mẫu hóa đơn và kéo thả phần tử');
+        return Setting::set(self::SETTING_KEY, json_encode($config, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), 'banking', 'text', 'Cấu hình mẫu hóa đơn và kéo thả phần tử 2 tầng');
     }
 }
