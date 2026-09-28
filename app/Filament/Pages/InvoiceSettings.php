@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Helpers\InvoiceHelper;
 use App\Models\Setting;
 use App\Services\InvoiceConfigService;
+use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Radio;
@@ -109,7 +110,7 @@ class InvoiceSettings extends Page implements HasForms
                                 ->live(),
 
                             Toggle::make('show_seller_address')
-                                ->label('Hiển thị Địa chỉ trụ sở / Chi nhánh')
+                                ->label('Hiển thị Địa chỉ cơ sở')
                                 ->live(),
 
                             Toggle::make('show_seller_tax')
@@ -139,39 +140,52 @@ class InvoiceSettings extends Page implements HasForms
                                 ->placeholder('Ví dụ: Makeup Artist & Beauty Studio hoặc Mẫu số 02 - VT')
                                 ->live(onBlur: true),
                         ]),
-                        Grid::make(2)->schema([
-                            Toggle::make('show_invoice_number')
-                                ->label('Hiển thị Số hóa đơn (VD: #00012)')
-                                ->live(),
 
-                            TextInput::make('invoice_number_prefix')
-                                ->label('Tiền tố Mã hóa đơn')
-                                ->placeholder('Ví dụ: HD, BH, XK (để trống nếu không cần)')
-                                ->disabled(fn ($get) => ! $get('show_invoice_number'))
-                                ->helperText('Chỉ có hiệu lực khi công tắc bên cạnh được bật')
-                                ->live(onBlur: true),
+                        Grid::make(3)->schema([
+                            Fieldset::make('Số Hóa Đơn')
+                                ->columns(1)
+                                ->columnSpan(1)
+                                ->schema([
+                                    Toggle::make('show_invoice_number')
+                                        ->label('Hiển thị Số hóa đơn (#00012)')
+                                        ->live(),
 
-                            Toggle::make('show_invoice_symbol')
-                                ->label('Hiển thị Ký hiệu mẫu số (VD: 1C26TAV)')
-                                ->live(),
+                                    TextInput::make('invoice_number_prefix')
+                                        ->label('Tiền tố Mã hóa đơn')
+                                        ->placeholder('Ví dụ: HD, BH, XK...')
+                                        ->disabled(fn ($get) => ! $get('show_invoice_number'))
+                                        ->live(onBlur: true),
+                                ]),
 
-                            TextInput::make('invoice_symbol')
-                                ->label('Ký hiệu Hóa đơn')
-                                ->placeholder('Ví dụ: 1C26TAV')
-                                ->disabled(fn ($get) => ! $get('show_invoice_symbol'))
-                                ->helperText('Chỉ có hiệu lực khi công tắc bên cạnh được bật')
-                                ->live(onBlur: true),
+                            Fieldset::make('Ký Hiệu Mẫu Số')
+                                ->columns(1)
+                                ->columnSpan(1)
+                                ->schema([
+                                    Toggle::make('show_invoice_symbol')
+                                        ->label('Hiển thị Ký hiệu mẫu số (VD: 1C26TAV)')
+                                        ->live(),
 
-                            Toggle::make('show_cqt_code')
-                                ->label('Hiển thị Mã Cơ quan thuế (HĐĐT)')
-                                ->live(),
+                                    TextInput::make('invoice_symbol')
+                                        ->label('Ký hiệu Hóa đơn')
+                                        ->placeholder('Ví dụ: 1C26TAV')
+                                        ->disabled(fn ($get) => ! $get('show_invoice_symbol'))
+                                        ->live(onBlur: true),
+                                ]),
 
-                            TextInput::make('cqt_code')
-                                ->label('Mã CQT mẫu')
-                                ->placeholder('Ví dụ: 003447FDA6C1054E3CBBBB4A4C5AE4D9FF')
-                                ->disabled(fn ($get) => ! $get('show_cqt_code'))
-                                ->helperText('Chỉ có hiệu lực khi công tắc bên cạnh được bật')
-                                ->live(onBlur: true),
+                            Fieldset::make('Mã Cơ Quan Thuế (HĐĐT)')
+                                ->columns(1)
+                                ->columnSpan(1)
+                                ->schema([
+                                    Toggle::make('show_cqt_code')
+                                        ->label('Hiển thị Mã Cơ quan thuế')
+                                        ->live(),
+
+                                    TextInput::make('cqt_code')
+                                        ->label('Mã CQT mẫu')
+                                        ->placeholder('Ví dụ: 003447FDA6C1054E3CBBBB...')
+                                        ->disabled(fn ($get) => ! $get('show_cqt_code'))
+                                        ->live(onBlur: true),
+                                ]),
                         ]),
                     ])
                     ->collapsible(),
@@ -200,17 +214,21 @@ class InvoiceSettings extends Page implements HasForms
                             Toggle::make('show_buyer_tax')
                                 ->label('Hiển thị Mã số thuế người mua')
                                 ->live(),
-
-                            Toggle::make('show_payment_method')
-                                ->label('Hiển thị Hình thức thanh toán (TM/CK)')
-                                ->live(),
                         ]),
-                        TextInput::make('payment_method_default')
-                            ->label('Hình thức thanh toán mặc định')
-                            ->placeholder('Ví dụ: Tiền mặt / Chuyển khoản')
-                            ->disabled(fn ($get) => ! $get('show_payment_method'))
-                            ->helperText('Chỉ áp dụng khi công tắc "Hiển thị Hình thức thanh toán" được bật')
-                            ->live(onBlur: true),
+
+                        Fieldset::make('Hình Thức Thanh Toán')
+                            ->columns(1)
+                            ->schema([
+                                Toggle::make('show_payment_method')
+                                    ->label('Hiển thị Hình thức thanh toán trên hóa đơn (TM/CK)')
+                                    ->live(),
+
+                                TextInput::make('payment_method_default')
+                                    ->label('Hình thức thanh toán mặc định')
+                                    ->placeholder('Ví dụ: Tiền mặt / Chuyển khoản')
+                                    ->disabled(fn ($get) => ! $get('show_payment_method'))
+                                    ->live(onBlur: true),
+                            ]),
                     ])
                     ->collapsible(),
 
@@ -234,19 +252,23 @@ class InvoiceSettings extends Page implements HasForms
                             Toggle::make('show_column_discount')
                                 ->label('Cột Chiết khấu / Giảm giá')
                                 ->live(),
-
-                            Toggle::make('show_column_tax')
-                                ->label('Cột Thuế suất GTGT (%)')
-                                ->live(),
-
-                            TextInput::make('tax_rate_default')
-                                ->label('Thuế suất GTGT mặc định (%)')
-                                ->numeric()
-                                ->default(0)
-                                ->disabled(fn ($get) => ! $get('show_column_tax'))
-                                ->helperText('Chỉ áp dụng khi công tắc "Cột Thuế suất GTGT" được bật')
-                                ->live(onBlur: true),
                         ]),
+
+                        Fieldset::make('Thuế Suất Giá Trị Gia Tăng (VAT)')
+                            ->columns(1)
+                            ->schema([
+                                Toggle::make('show_column_tax')
+                                    ->label('Hiển thị Cột Thuế suất GTGT (%)')
+                                    ->live(),
+
+                                TextInput::make('tax_rate_default')
+                                    ->label('Thuế suất GTGT mặc định (%)')
+                                    ->numeric()
+                                    ->default(0)
+                                    ->placeholder('Ví dụ: 8 hoặc 10')
+                                    ->disabled(fn ($get) => ! $get('show_column_tax'))
+                                    ->live(onBlur: true),
+                            ]),
                     ])
                     ->collapsible(),
 
@@ -289,17 +311,20 @@ class InvoiceSettings extends Page implements HasForms
                     ->icon('heroicon-o-chat-bubble-left-ellipsis')
                     ->description('Lời dặn dò khách hàng, chính sách đặt cọc/bảo hành & Lời cảm ơn chân trang')
                     ->schema([
-                        Toggle::make('show_notes')
-                            ->label('Hiển thị Khung Ghi chú & Lưu ý')
-                            ->live(),
+                        Fieldset::make('Khung Ghi Chú & Lưu Ý')
+                            ->columns(1)
+                            ->schema([
+                                Toggle::make('show_notes')
+                                    ->label('Hiển thị Khung Ghi chú & Lưu ý trên hóa đơn')
+                                    ->live(),
 
-                        Textarea::make('notes_content')
-                            ->label('Nội dung Ghi chú / Lưu ý / Điều khoản')
-                            ->rows(3)
-                            ->disabled(fn ($get) => ! $get('show_notes'))
-                            ->placeholder('Ví dụ: Quý khách vui lòng kiểm tra diện mạo trước khi rời studio...')
-                            ->helperText('Chỉ hiển thị trên hóa đơn khi công tắc bên trên được bật')
-                            ->live(onBlur: true),
+                                Textarea::make('notes_content')
+                                    ->label('Nội dung Ghi chú / Lưu ý / Điều khoản')
+                                    ->rows(3)
+                                    ->disabled(fn ($get) => ! $get('show_notes'))
+                                    ->placeholder('Ví dụ: Quý khách vui lòng kiểm tra diện mạo trước khi rời studio...')
+                                    ->live(onBlur: true),
+                            ]),
 
                         TextInput::make('footer_thank_you')
                             ->label('Lời cảm ơn chân trang')
@@ -312,18 +337,19 @@ class InvoiceSettings extends Page implements HasForms
                     ->icon('heroicon-o-globe-alt')
                     ->description('Dành cho hóa đơn điện tử VAT cần link tra cứu và mã bảo mật')
                     ->schema([
-                        Grid::make(2)->schema([
-                            Toggle::make('show_lookup_link')
-                                ->label('Hiển thị Link tra cứu HĐĐT')
-                                ->live(),
+                        Fieldset::make('Tra Cứu Hóa Đơn Điện Tử')
+                            ->columns(1)
+                            ->schema([
+                                Toggle::make('show_lookup_link')
+                                    ->label('Hiển thị Link tra cứu HĐĐT')
+                                    ->live(),
 
-                            TextInput::make('lookup_url')
-                                ->label('Đường link cổng tra cứu')
-                                ->placeholder('Ví dụ: https://tracuu.hoadondientu.gdt.gov.vn')
-                                ->disabled(fn ($get) => ! $get('show_lookup_link'))
-                                ->helperText('Chỉ kích hoạt khi công tắc bên cạnh được bật')
-                                ->live(onBlur: true),
-                        ]),
+                                TextInput::make('lookup_url')
+                                    ->label('Đường link cổng tra cứu')
+                                    ->placeholder('Ví dụ: https://tracuu.hoadondientu.gdt.gov.vn')
+                                    ->disabled(fn ($get) => ! $get('show_lookup_link'))
+                                    ->live(onBlur: true),
+                            ]),
                     ])
                     ->collapsible(),
             ])

@@ -128,6 +128,41 @@
             border-color: #27272a;
         }
 
+        /* FIELDSET BOX STYLING GIỐNG PRESET CARD */
+        fieldset.fi-fo-fieldset {
+            background-color: #f8fafc !important;
+            border: 1.5px solid #e2e8f0 !important;
+            border-radius: 14px !important;
+            padding: 14px 16px !important;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+        .dark fieldset.fi-fo-fieldset {
+            background-color: #18181b !important;
+            border-color: #27272a !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        fieldset.fi-fo-fieldset:hover {
+            border-color: #cbd5e1 !important;
+        }
+        .dark fieldset.fi-fo-fieldset:hover {
+            border-color: #3f3f46 !important;
+        }
+        fieldset.fi-fo-fieldset > legend {
+            font-size: 11.5px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            color: #475569 !important;
+            padding: 2px 8px !important;
+            border-radius: 6px !important;
+            background-color: #e2e8f0 !important;
+        }
+        .dark fieldset.fi-fo-fieldset > legend {
+            color: #d4d4d8 !important;
+            background-color: #27272a !important;
+        }
+
         /* NÚT LƯU CẤU HÌNH */
         .btn-save-action {
             display: inline-flex;
