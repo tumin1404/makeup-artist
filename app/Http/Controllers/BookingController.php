@@ -11,7 +11,14 @@ class BookingController extends Controller
 {
     public function index()
     {
-        $services = Service::where('is_active', true)->get();
+        $services = Service::with('category')
+            ->where('is_active', true)
+            ->get()
+            ->sortBy([
+                fn ($a, $b) => ($a->category->order ?? 99) <=> ($b->category->order ?? 99),
+                fn ($a, $b) => $a->id <=> $b->id,
+            ]);
+
         return view('booking', compact('services'));
     }
 

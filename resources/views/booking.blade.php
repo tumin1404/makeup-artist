@@ -355,31 +355,36 @@
                         </div>
                     </div>
 
-                    {{-- CHỌN NHIỀU DỊCH VỤ CÓ PHÂN LOẠI --}}
+                    {{-- CHỌN NHIỀU DỊCH VỤ CÓ PHÂN LOẠI THEO DANH MỤC --}}
                     <div class="group pt-4">
                         <label class="form-label mb-6">Bạn quan tâm đến dịch vụ nào? (Có thể chọn nhiều)</label>
                         
-                        {{-- Gom nhóm dịch vụ theo category hoặc service_level (Giả định ở Controller đã nhóm bằng ->groupBy('service_level')) --}}
                         @php
-                            // Chuyển mảng services thành Collection và gom nhóm theo cấp độ (Basic, Premium, Extra)
-                            $groupedServices = collect($services)->groupBy('service_level');
+                            // Gom nhóm dịch vụ theo Danh mục chuẩn (Category)
+                            $groupedServices = collect($services)->groupBy(function ($item) {
+                                return $item->category->name ?? 'Dịch Vụ Khác';
+                            });
                         @endphp
 
                         <div class="space-y-8">
-                            @foreach($groupedServices as $level => $items)
+                            @foreach($groupedServices as $categoryName => $items)
                                 <div>
-                                    <h4 class="text-sm font-serif text-dark mb-4 border-b border-gray-100 pb-2">
-                                        {{ $level === 'Premium' ? 'Gói Cao Cấp (Premium)' : ($level === 'Basic' ? 'Gói Tiêu Chuẩn (Basic)' : 'Dịch vụ thêm') }}
+                                    <h4 class="text-sm font-serif font-bold text-dark mb-4 border-b border-gray-100 pb-2 flex items-center justify-between">
+                                        <span class="flex items-center gap-2">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-gold inline-block"></span>
+                                            {{ $categoryName }}
+                                        </span>
+                                        <span class="text-[11px] font-sans font-normal text-gray-400">({{ count($items) }} gói)</span>
                                     </h4>
                                     <div class="grid md:grid-cols-2 gap-4">
                                         @foreach($items as $service)
                                             <div class="relative">
                                                 {{-- Đổi name thành mảng (service_ids[]) để cho phép chọn nhiều --}}
                                                 <input type="checkbox" id="service_{{ $service->id }}" name="service_ids[]" value="{{ $service->id }}" class="service-checkbox">
-                                                <label for="service_{{ $service->id }}" class="service-label">
-                                                    <i class="fas fa-check-circle check-icon mr-3"></i>
-                                                    <span class="flex-1">{{ $service->name }}</span>
-                                                    <span class="text-xs text-gold font-medium">{{ $service->price_text }}</span>
+                                                <label for="service_{{ $service->id }}" class="service-label hover:border-gold/60 hover:bg-gold/5 transition-all">
+                                                    <i class="fas fa-check-circle check-icon mr-3 text-gold"></i>
+                                                    <span class="flex-1 font-medium text-sm text-dark">{{ $service->name }}</span>
+                                                    <span class="text-xs text-gold font-bold ml-2 whitespace-nowrap">{{ $service->price_text }}</span>
                                                 </label>
                                             </div>
                                         @endforeach
