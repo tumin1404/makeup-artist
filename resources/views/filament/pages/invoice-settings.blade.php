@@ -1081,16 +1081,19 @@
                 }
             });
 
-            // IN THỬ TRỰC TIẾP TỪ CANVAS (KHÔNG DÙNG THẺ SCRIPT CON ĐỂ TRÁNH LỖI PHÂN TÍCH HTML)
+            // IN THỬ TRỰC TIẾP TỪ CANVAS (DÙNG DOM API NGUYÊN BẢN, TUYỆT ĐỐI KHÔNG DÙNG CHUỖI HTML GÂY LỖI BLADE)
             window.printInvoicePreview = function() {
                 const container = document.getElementById('visual-invoice-sheet');
                 if (!container) return;
 
+                const printWindow = window.open('', '_blank');
+                if (!printWindow) return;
+
                 const clone = container.cloneNode(true);
-                
-                clone.querySelectorAll('.resize-handle-zone-right, .resize-handle-zone-corner, .widget-hover-pill').forEach(el => el.remove());
-                
-                clone.querySelectorAll('.invoice-grid-widget').forEach(el => {
+                clone.querySelectorAll('.resize-handle-zone-right, .resize-handle-zone-corner, .widget-hover-pill').forEach(function(el) {
+                    el.remove();
+                });
+                clone.querySelectorAll('.invoice-grid-widget').forEach(function(el) {
                     el.style.border = 'none';
                     el.style.background = 'transparent';
                     el.style.boxShadow = 'none';
@@ -1098,40 +1101,20 @@
                     el.style.cursor = 'default';
                 });
 
-                const printWindow = window.open('', '_blank');
-                if (!printWindow) return;
+                const tailwindLink = printWindow.document.createElement('link');
+                tailwindLink.rel = 'stylesheet';
+                tailwindLink.href = 'https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css';
+                printWindow.document.head.appendChild(tailwindLink);
 
-                printWindow.document.open();
-                printWindow.document.write('<!DOCTYPE html>' +
-                    '<html>' +
-                    '<head>' +
-                    '<title>In Hóa Đơn</title>' +
-                    '<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">' +
-                    '<style>' +
-                    'body { background: white; padding: 20px; font-family: sans-serif; color: #111; }' +
-                    '#invoice-grid-canvas { display: grid !important; grid-template-columns: repeat(12, 1fr) !important; gap: 16px !important; width: 100% !important; }' +
-                    '.col-span-1 { grid-column: span 1 !important; }' +
-                    '.col-span-2 { grid-column: span 2 !important; }' +
-                    '.col-span-3 { grid-column: span 3 !important; }' +
-                    '.col-span-4 { grid-column: span 4 !important; }' +
-                    '.col-span-5 { grid-column: span 5 !important; }' +
-                    '.col-span-6 { grid-column: span 6 !important; }' +
-                    '.col-span-7 { grid-column: span 7 !important; }' +
-                    '.col-span-8 { grid-column: span 8 !important; }' +
-                    '.col-span-9 { grid-column: span 9 !important; }' +
-                    '.col-span-10 { grid-column: span 10 !important; }' +
-                    '.col-span-11 { grid-column: span 11 !important; }' +
-                    '.col-span-12 { grid-column: span 12 !important; }' +
-                    '@media print { body { padding: 0; } @page { margin: 10mm; } }' +
-                    '</style>' +
-                    '</head>' +
-                    '<body>' +
-                    clone.outerHTML +
-                    '</body>' +
-                    '</html>');
-                printWindow.document.close();
-                printWindow.focus();
+                const customStyle = printWindow.document.createElement('style');
+                customStyle.textContent = 'body { background: white; padding: 20px; font-family: sans-serif; color: #111; } #invoice-grid-canvas { display: grid !important; grid-template-columns: repeat(12, 1fr) !important; gap: 16px !important; width: 100% !important; } .col-span-1 { grid-column: span 1 !important; } .col-span-2 { grid-column: span 2 !important; } .col-span-3 { grid-column: span 3 !important; } .col-span-4 { grid-column: span 4 !important; } .col-span-5 { grid-column: span 5 !important; } .col-span-6 { grid-column: span 6 !important; } .col-span-7 { grid-column: span 7 !important; } .col-span-8 { grid-column: span 8 !important; } .col-span-9 { grid-column: span 9 !important; } .col-span-10 { grid-column: span 10 !important; } .col-span-11 { grid-column: span 11 !important; } .col-span-12 { grid-column: span 12 !important; } @media print { body { padding: 0; } @page { margin: 10mm; } }';
+                printWindow.document.head.appendChild(customStyle);
+
+                printWindow.document.body.appendChild(clone);
+                printWindow.document.title = 'In Hóa Đơn';
+
                 setTimeout(function() {
+                    printWindow.focus();
                     printWindow.print();
                 }, 400);
             };
