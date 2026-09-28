@@ -54,7 +54,8 @@
 
         $defaultBlocks = \App\Services\InvoiceConfigService::getDefaultBlocksStructure();
         $blocksStructure = $config['blocks_structure'] ?? $defaultBlocks;
-        $blocksOrder = $config['blocks_order'] ?? array_keys($blocksStructure);
+        $defaultGrid = \App\Services\InvoiceConfigService::getDefaultGridLayout();
+        $gridLayout = $config['grid_layout'] ?? $defaultGrid;
 
         // Map legacy block ids if needed
         $legacyMap = [
@@ -68,6 +69,16 @@
             'signatures' => 'block_signatures',
             'footer_lookup' => 'block_lookup',
         ];
+
+        // Sắp xếp gridLayout theo thứ tự dòng y, sau đó cột x
+        usort($gridLayout, function ($a, $b) {
+            $ay = $a['y'] ?? 0;
+            $by = $b['y'] ?? 0;
+            if ($ay === $by) {
+                return ($a['x'] ?? 0) <=> ($b['x'] ?? 0);
+            }
+            return $ay <=> $by;
+        });
     @endphp
 
     <style>
@@ -136,16 +147,17 @@
             position: relative;
             overflow: hidden;
             width: 100%;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: flex-start;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            column-gap: 20px;
+            row-gap: 16px;
+            align-items: start;
             box-sizing: border-box;
         }
 
         .paper-a4 { max-width: 840px; min-height: 1050px; }
         .paper-a5 { max-width: 680px; min-height: 600px; padding: 30px 35px; font-size: 12px; }
-        .paper-k80 { max-width: 380px; padding: 20px 15px; font-size: 11px; border-radius: 0; box-shadow: none; border: 1px solid #ddd; }
+        .paper-k80 { max-width: 380px; padding: 20px 15px; font-size: 11px; border-radius: 0; box-shadow: none; border: 1px solid #ddd; display: block; }
 
         /* THEME STYLES */
         .theme-luxury {
@@ -174,15 +186,22 @@
             box-shadow: none;
         }
 
-        /* KHỐI LAYOUT 2 CỘT HOẶC CẢ DÒNG */
+        /* LƯỚI 12 CỘT 2D */
+        .col-span-1 { grid-column: span 1; }
+        .col-span-2 { grid-column: span 2; }
+        .col-span-3 { grid-column: span 3; }
+        .col-span-4 { grid-column: span 4; }
+        .col-span-5 { grid-column: span 5; }
+        .col-span-6 { grid-column: span 6; }
+        .col-span-7 { grid-column: span 7; }
+        .col-span-8 { grid-column: span 8; }
+        .col-span-9 { grid-column: span 9; }
+        .col-span-10 { grid-column: span 10; }
+        .col-span-11 { grid-column: span 11; }
+        .col-span-12 { grid-column: span 12; }
+
         .invoice-block {
             box-sizing: border-box;
-            margin-bottom: 16px;
-        }
-        .block-width-half {
-            width: 48.5%;
-        }
-        .block-width-full {
             width: 100%;
         }
 
@@ -344,26 +363,16 @@
             width: 100%;
         }
 
-        /* CHỮ KÝ */
-        .signatures-grid {
-            display: flex;
-            justify-content: space-around;
-            width: 100%;
-            margin-top: 20px;
+        /* CHỮ KÝ TỪNG CỘT */
+        .sig-box-single {
             text-align: center;
-        }
-        .sig-col {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            min-height: 110px;
-            min-width: 160px;
+            width: 100%;
+            padding: 10px 0;
         }
         .sig-title {
             font-weight: 700;
             text-transform: uppercase;
-            font-size: 11.5px;
+            font-size: 12px;
             color: #1f2937;
         }
         .sig-subtitle {
@@ -371,6 +380,23 @@
             color: #9ca3af;
             font-style: italic;
             margin-top: 2px;
+        }
+
+        /* CHỮ KÝ NHIỀU BÊN */
+        .signatures-grid {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .sig-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 100px;
+            min-width: 130px;
         }
         .digital-stamp {
             border: 2px solid #10b981;
@@ -391,7 +417,7 @@
             color: #9ca3af;
             border-top: 1px solid #f3f4f6;
             padding-top: 12px;
-            margin-top: 20px;
+            margin-top: 10px;
             width: 100%;
         }
 
@@ -447,21 +473,35 @@
     {{-- KHUNG HÓA ĐƠN CHÍNH --}}
     <div class="invoice-card paper-{{ $paperSize }} theme-{{ $theme }}" id="invoice-capture-area">
 
-        @foreach($blocksOrder as $rawBlockId)
+        @foreach($gridLayout as $gridItem)
             @php
+                $rawBlockId = $gridItem['id'] ?? '';
                 $blockId = $legacyMap[$rawBlockId] ?? $rawBlockId;
                 $blockData = $blocksStructure[$blockId] ?? ($defaultBlocks[$blockId] ?? null);
                 if (!$blockData) continue;
 
-                $bWidth = $blockData['width'] ?? 'full';
-                $bWidthClass = ($bWidth === 'half' && $paperSize !== 'k80') ? 'block-width-half' : 'block-width-full';
+                $w = $gridItem['w'] ?? 12;
+                $spanClass = ($paperSize === 'k80') ? 'col-span-12' : "col-span-{$w}";
                 $bAlign = $blockData['align'] ?? 'left';
                 $bAlignClass = 'align-' . $bAlign;
                 $elementsOrder = $blockData['elements_order'] ?? array_keys($blockData['elements'] ?? []);
                 $elements = $blockData['elements'] ?? [];
+
+                // Kiểm tra điều kiện hiển thị
+                if ($blockId === 'block_signature_customer' || $blockId === 'block_signature_creator') {
+                    if ($sigType !== 'two_parties') continue;
+                } elseif ($blockId === 'block_signatures') {
+                    if (!in_array($sigType, ['five_parties', 'digital_stamp'])) continue;
+                } elseif ($blockId === 'block_vietqr') {
+                    if (empty($config['show_vietqr'])) continue;
+                } elseif ($blockId === 'block_notes') {
+                    if (empty($config['show_notes']) && empty($config['footer_thank_you'])) continue;
+                } elseif ($blockId === 'block_lookup') {
+                    if (empty($config['show_lookup_link'])) continue;
+                }
             @endphp
 
-            <div class="invoice-block {{ $bWidthClass }} {{ $bAlignClass }}" id="render-{{ $blockId }}">
+            <div class="invoice-block {{ $spanClass }} {{ $bAlignClass }}" id="render-{{ $blockId }}">
 
                 {{-- 1. SELLER BLOCK --}}
                 @if($blockId === 'block_seller')
@@ -716,7 +756,23 @@
                         @endif
                     @endforeach
 
-                {{-- 8. SIGNATURES --}}
+                {{-- 8. CHỮ KÝ KHÁCH HÀNG (ĐỘC LẬP) --}}
+                @elseif($blockId === 'block_signature_customer')
+                    <div class="sig-box-single">
+                        <div class="sig-title">KHÁCH HÀNG</div>
+                        <div class="sig-subtitle">(Ký, ghi rõ họ tên)</div>
+                        <div style="margin-top: 55px; font-weight: 600; color: #4b5563;">{{ $booking->customer_name }}</div>
+                    </div>
+
+                {{-- 9. CHỮ KÝ NGƯỜI LẬP / STUDIO (ĐỘC LẬP) --}}
+                @elseif($blockId === 'block_signature_creator')
+                    <div class="sig-box-single">
+                        <div class="sig-title">NGƯỜI LẬP PHIẾU</div>
+                        <div class="sig-subtitle">(Ký, họ tên / Đóng dấu)</div>
+                        <div style="margin-top: 55px; font-weight: 600; color: #4b5563;">{{ $settings['site_name'] ?? 'Thảo Makeup Studio' }}</div>
+                    </div>
+
+                {{-- 10. CHỮ KÝ NHIỀU BÊN / DẤU ĐIỆN TỬ --}}
                 @elseif($blockId === 'block_signatures' && $sigType !== 'none')
                     @if($sigType === 'two_parties')
                         <div class="signatures-grid">
@@ -789,7 +845,7 @@
                         </div>
                     @endif
 
-                {{-- 9. FOOTER LOOKUP --}}
+                {{-- 11. FOOTER LOOKUP --}}
                 @elseif($blockId === 'block_lookup' && !empty($config['show_lookup_link']))
                     <div class="footer-lookup">
                         <p>Tra cứu tại Website: <a href="{{ $config['lookup_url'] }}" target="_blank" style="color: #2563eb; text-decoration: underline;">{{ $config['lookup_url'] }}</a> - Mã tra cứu: <strong>8BFLCX5VBP8J</strong></p>

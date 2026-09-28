@@ -9,7 +9,27 @@ class InvoiceConfigService
     const SETTING_KEY = 'invoice_custom_config';
 
     /**
-     * Cấu trúc Khối (Blocks) và Phần tử con (Elements) 2 tầng chuẩn
+     * Bố cục lưới 2D 12 cột chuẩn (Gridstack layout)
+     */
+    public static function getDefaultGridLayout(): array
+    {
+        return [
+            ['id' => 'block_seller', 'x' => 0, 'y' => 0, 'w' => 6, 'h' => 4],
+            ['id' => 'block_invoice_meta', 'x' => 6, 'y' => 0, 'w' => 6, 'h' => 4],
+            ['id' => 'block_buyer', 'x' => 0, 'y' => 4, 'w' => 12, 'h' => 3],
+            ['id' => 'block_items_table', 'x' => 0, 'y' => 7, 'w' => 12, 'h' => 4],
+            ['id' => 'block_vietqr', 'x' => 0, 'y' => 11, 'w' => 5, 'h' => 4],
+            ['id' => 'block_totals', 'x' => 5, 'y' => 11, 'w' => 7, 'h' => 4],
+            ['id' => 'block_notes', 'x' => 0, 'y' => 15, 'w' => 12, 'h' => 2],
+            ['id' => 'block_signature_customer', 'x' => 0, 'y' => 17, 'w' => 6, 'h' => 3],
+            ['id' => 'block_signature_creator', 'x' => 6, 'y' => 17, 'w' => 6, 'h' => 3],
+            ['id' => 'block_signatures', 'x' => 0, 'y' => 20, 'w' => 12, 'h' => 3],
+            ['id' => 'block_lookup', 'x' => 0, 'y' => 23, 'w' => 12, 'h' => 2],
+        ];
+    }
+
+    /**
+     * Cấu trúc Khối (Blocks) và Phần tử con (Elements) chuẩn
      */
     public static function getDefaultBlocksStructure(): array
     {
@@ -104,15 +124,34 @@ class InvoiceConfigService
                     'thank_you_text' => ['id' => 'thank_you_text', 'name' => 'Lời cảm ơn chân trang', 'align' => 'center', 'size' => 'sm', 'visible' => true],
                 ],
             ],
+            'block_signature_customer' => [
+                'id' => 'block_signature_customer',
+                'name' => 'Khối Chữ Ký Khách Hàng',
+                'width' => 'half',
+                'align' => 'center',
+                'elements_order' => ['signature_customer_part'],
+                'elements' => [
+                    'signature_customer_part' => ['id' => 'signature_customer_part', 'name' => 'Chữ ký & Họ tên Khách hàng', 'align' => 'center', 'size' => 'md', 'visible' => true],
+                ],
+            ],
+            'block_signature_creator' => [
+                'id' => 'block_signature_creator',
+                'name' => 'Khối Chữ Ký Người Lập / Studio',
+                'width' => 'half',
+                'align' => 'center',
+                'elements_order' => ['signature_creator_part'],
+                'elements' => [
+                    'signature_creator_part' => ['id' => 'signature_creator_part', 'name' => 'Chữ ký Người lập phiếu / Studio', 'align' => 'center', 'size' => 'md', 'visible' => true],
+                ],
+            ],
             'block_signatures' => [
                 'id' => 'block_signatures',
-                'name' => 'Khối Chữ Ký Trách Nhiệm',
+                'name' => 'Khối Chữ Ký Đầy Đủ (5 Bên / Dấu Điện Tử)',
                 'width' => 'full',
                 'align' => 'center',
-                'elements_order' => ['signature_customer_part', 'signature_creator_part'],
+                'elements_order' => ['signatures_multi_part'],
                 'elements' => [
-                    'signature_customer_part' => ['id' => 'signature_customer_part', 'name' => 'Chữ ký Khách hàng', 'align' => 'center', 'size' => 'md', 'visible' => true],
-                    'signature_creator_part' => ['id' => 'signature_creator_part', 'name' => 'Chữ ký Người lập phiếu / Studio', 'align' => 'center', 'size' => 'md', 'visible' => true],
+                    'signatures_multi_part' => ['id' => 'signatures_multi_part', 'name' => 'Cụm chữ ký nhiều bên / Con dấu điện tử', 'align' => 'center', 'size' => 'md', 'visible' => true],
                 ],
             ],
             'block_lookup' => [
@@ -134,6 +173,7 @@ class InvoiceConfigService
     public static function getPresets(): array
     {
         $defaultBlocks = self::getDefaultBlocksStructure();
+        $defaultGrid = self::getDefaultGridLayout();
 
         return [
             'luxury_service' => [
@@ -185,6 +225,18 @@ class InvoiceConfigService
                     'lookup_url' => '',
                     'blocks_structure' => $defaultBlocks,
                     'blocks_order' => array_keys($defaultBlocks),
+                    'grid_layout' => [
+                        ['id' => 'block_seller', 'x' => 0, 'y' => 0, 'w' => 6, 'h' => 4],
+                        ['id' => 'block_invoice_meta', 'x' => 6, 'y' => 0, 'w' => 6, 'h' => 4],
+                        ['id' => 'block_buyer', 'x' => 0, 'y' => 4, 'w' => 12, 'h' => 3],
+                        ['id' => 'block_items_table', 'x' => 0, 'y' => 7, 'w' => 12, 'h' => 4],
+                        ['id' => 'block_vietqr', 'x' => 0, 'y' => 11, 'w' => 5, 'h' => 4],
+                        ['id' => 'block_totals', 'x' => 5, 'y' => 11, 'w' => 7, 'h' => 4],
+                        ['id' => 'block_notes', 'x' => 0, 'y' => 15, 'w' => 12, 'h' => 2],
+                        ['id' => 'block_signature_customer', 'x' => 0, 'y' => 17, 'w' => 6, 'h' => 3],
+                        ['id' => 'block_signature_creator', 'x' => 6, 'y' => 17, 'w' => 6, 'h' => 3],
+                        ['id' => 'block_lookup', 'x' => 0, 'y' => 20, 'w' => 12, 'h' => 2],
+                    ],
                 ]
             ],
             'retail_pos' => [
@@ -236,6 +288,18 @@ class InvoiceConfigService
                     'lookup_url' => '',
                     'blocks_structure' => $defaultBlocks,
                     'blocks_order' => array_keys($defaultBlocks),
+                    'grid_layout' => [
+                        ['id' => 'block_seller', 'x' => 0, 'y' => 0, 'w' => 6, 'h' => 4],
+                        ['id' => 'block_invoice_meta', 'x' => 6, 'y' => 0, 'w' => 6, 'h' => 4],
+                        ['id' => 'block_buyer', 'x' => 0, 'y' => 4, 'w' => 12, 'h' => 3],
+                        ['id' => 'block_items_table', 'x' => 0, 'y' => 7, 'w' => 12, 'h' => 4],
+                        ['id' => 'block_vietqr', 'x' => 0, 'y' => 11, 'w' => 5, 'h' => 4],
+                        ['id' => 'block_totals', 'x' => 5, 'y' => 11, 'w' => 7, 'h' => 4],
+                        ['id' => 'block_notes', 'x' => 0, 'y' => 15, 'w' => 12, 'h' => 2],
+                        ['id' => 'block_signature_customer', 'x' => 0, 'y' => 17, 'w' => 6, 'h' => 3],
+                        ['id' => 'block_signature_creator', 'x' => 6, 'y' => 17, 'w' => 6, 'h' => 3],
+                        ['id' => 'block_lookup', 'x' => 0, 'y' => 20, 'w' => 12, 'h' => 2],
+                    ],
                 ]
             ],
             'electronic_vat' => [
@@ -287,6 +351,16 @@ class InvoiceConfigService
                     'lookup_url' => 'https://tracuu.hoadondientu.gdt.gov.vn',
                     'blocks_structure' => $defaultBlocks,
                     'blocks_order' => array_keys($defaultBlocks),
+                    'grid_layout' => [
+                        ['id' => 'block_seller', 'x' => 0, 'y' => 0, 'w' => 6, 'h' => 4],
+                        ['id' => 'block_invoice_meta', 'x' => 6, 'y' => 0, 'w' => 6, 'h' => 4],
+                        ['id' => 'block_buyer', 'x' => 0, 'y' => 4, 'w' => 12, 'h' => 3],
+                        ['id' => 'block_items_table', 'x' => 0, 'y' => 7, 'w' => 12, 'h' => 4],
+                        ['id' => 'block_totals', 'x' => 0, 'y' => 11, 'w' => 12, 'h' => 4],
+                        ['id' => 'block_vietqr', 'x' => 0, 'y' => 15, 'w' => 6, 'h' => 4],
+                        ['id' => 'block_signatures', 'x' => 6, 'y' => 15, 'w' => 6, 'h' => 4],
+                        ['id' => 'block_lookup', 'x' => 0, 'y' => 19, 'w' => 12, 'h' => 2],
+                    ],
                 ]
             ],
             'inventory_voucher' => [
@@ -338,6 +412,15 @@ class InvoiceConfigService
                     'lookup_url' => '',
                     'blocks_structure' => $defaultBlocks,
                     'blocks_order' => array_keys($defaultBlocks),
+                    'grid_layout' => [
+                        ['id' => 'block_seller', 'x' => 0, 'y' => 0, 'w' => 6, 'h' => 4],
+                        ['id' => 'block_invoice_meta', 'x' => 6, 'y' => 0, 'w' => 6, 'h' => 4],
+                        ['id' => 'block_buyer', 'x' => 0, 'y' => 4, 'w' => 12, 'h' => 3],
+                        ['id' => 'block_items_table', 'x' => 0, 'y' => 7, 'w' => 12, 'h' => 4],
+                        ['id' => 'block_totals', 'x' => 0, 'y' => 11, 'w' => 12, 'h' => 4],
+                        ['id' => 'block_signatures', 'x' => 0, 'y' => 15, 'w' => 12, 'h' => 4],
+                        ['id' => 'block_notes', 'x' => 0, 'y' => 19, 'w' => 12, 'h' => 2],
+                    ],
                 ]
             ],
         ];
@@ -384,8 +467,34 @@ class InvoiceConfigService
             }
         }
 
+        // Đảm bảo grid_layout luôn tồn tại
+        if (empty($decoded['grid_layout'])) {
+            $decoded['grid_layout'] = self::getDefaultGridLayout();
+        } else {
+            // Đảm bảo tất cả các block mặc định đều có mặt trong grid_layout
+            $existingIds = array_column($decoded['grid_layout'], 'id');
+            $maxY = 0;
+            foreach ($decoded['grid_layout'] as $item) {
+                $yEnd = ($item['y'] ?? 0) + ($item['h'] ?? 2);
+                if ($yEnd > $maxY) $maxY = $yEnd;
+            }
+
+            foreach (self::getDefaultGridLayout() as $defaultItem) {
+                if (!in_array($defaultItem['id'], $existingIds)) {
+                    $decoded['grid_layout'][] = [
+                        'id' => $defaultItem['id'],
+                        'x' => 0,
+                        'y' => $maxY,
+                        'w' => $defaultItem['w'] ?? 12,
+                        'h' => $defaultItem['h'] ?? 3,
+                    ];
+                    $maxY += ($defaultItem['h'] ?? 3);
+                }
+            }
+        }
+
         if (empty($decoded['blocks_order'])) {
-            $decoded['blocks_order'] = array_keys($defaultBlocks);
+            $decoded['blocks_order'] = array_keys($decoded['blocks_structure']);
         }
 
         return array_merge($default, $decoded);
@@ -396,6 +505,6 @@ class InvoiceConfigService
      */
     public static function saveConfig(array $config): bool
     {
-        return Setting::set(self::SETTING_KEY, json_encode($config, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), 'banking', 'text', 'Cấu hình mẫu hóa đơn và kéo thả phần tử 2 tầng');
+        return Setting::set(self::SETTING_KEY, json_encode($config, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), 'banking', 'text', 'Cấu hình mẫu hóa đơn và kéo thả lưới 2D Gridstack');
     }
 }

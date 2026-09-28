@@ -36,12 +36,15 @@ class InvoiceSettings extends Page implements HasForms
 
     public ?array $data = [];
     public string $activePreset = 'luxury_service';
+    public array $gridLayout = [];
 
     public function mount(): void
     {
         $config = InvoiceConfigService::getCurrentConfig();
         $this->activePreset = $config['active_preset'] ?? 'luxury_service';
+        $this->gridLayout = $config['grid_layout'] ?? InvoiceConfigService::getDefaultGridLayout();
         $this->form->fill($config);
+        $this->data = $config;
     }
 
     public function form(Form $form): Form
@@ -303,7 +306,7 @@ class InvoiceSettings extends Page implements HasForms
                     ->description('Tích hợp mã VietQR Napas247 tự động điền số tiền và cú pháp chuyển khoản')
                     ->schema([
                         Toggle::make('show_vietqr')
-                            ->label('Hiển thị Khung VietQR Chuyển Khoản')
+                            ->label('Hiển thị Khung VietQR Chuyển Khoan')
                             ->helperText('Quét mã là tự động nạp chính xác STK + Số tiền + Cú pháp chuyển khoản trên mọi app ngân hàng')
                             ->live(),
                     ])
@@ -376,9 +379,13 @@ class InvoiceSettings extends Page implements HasForms
         
         $newConfig = $preset['config'];
         $newConfig['active_preset'] = $presetKey;
+        $this->gridLayout = $newConfig['grid_layout'] ?? InvoiceConfigService::getDefaultGridLayout();
 
         $this->form->fill($newConfig);
         $this->data = $newConfig;
+        $this->data['grid_layout'] = $this->gridLayout;
+
+        $this->dispatch('grid-layout-updated', layout: $this->gridLayout);
 
         Notification::make()
             ->title('Đã nạp mẫu: ' . $preset['name'])
@@ -389,17 +396,27 @@ class InvoiceSettings extends Page implements HasForms
     }
 
     /**
-     * Cập nhật thứ tự các Khối (Blocks) từ sự kiện kéo thả
+     * Cập nhật toàn bộ Layout Gridstack 2D từ sự kiện kéo thả / co giãn
      */
-    public function updateBlockOrder(array $newBlockOrder): void
+    public function updateGridLayout(array $newLayout): void
     {
-        $this->data['blocks_order'] = $newBlockOrder;
+        $this->gridLayout = $newLayout;
+        $this->data['grid_layout'] = $newLayout;
         
+        // Đồng bộ lại width vào blocks_structure
+        $this->ensureBlocksStructure();
+        foreach ($newLayout as $item) {
+            $bId = $item['id'] ?? '';
+            if ($bId && isset($this->data['blocks_structure'][$bId])) {
+                $this->data['blocks_structure'][$bId]['width'] = (($item['w'] ?? 12) >= 12) ? 'full' : 'half';
+            }
+        }
+
         Notification::make()
-            ->title('Đã đổi thứ tự khối trên khung xem trước')
-            ->body('Hãy nhấn nút "💾 Lưu Toàn Bộ Cấu Hình" bên dưới để lưu vĩnh viễn vị trí này.')
+            ->title('Đã đổi vị trí & kích thước trên lưới 2D')
+            ->body('Hãy nhấn "💾 Lưu Toàn Bộ Cấu Hình" bên dưới để lưu vĩnh viễn vị trí này.')
             ->info()
-            ->duration(4000)
+            ->duration(3000)
             ->send();
     }
 
@@ -408,18 +425,16 @@ class InvoiceSettings extends Page implements HasForms
      */
     public function updateElementOrderInBlock(string $blockId, array $newElementOrder): void
     {
-        if (!isset($this->data['blocks_structure'])) {
-            $this->data['blocks_structure'] = InvoiceConfigService::getCurrentConfig()['blocks_structure'] ?? InvoiceConfigService::getDefaultBlocksStructure();
-        }
+        $this->ensureBlocksStructure();
 
         if (isset($this->data['blocks_structure'][$blockId])) {
             $this->data['blocks_structure'][$blockId]['elements_order'] = $newElementOrder;
             
             Notification::make()
                 ->title('Đã đổi thứ tự phần tử trên khung xem trước')
-                ->body('Hãy nhấn nút "💾 Lưu Toàn Bộ Cấu Hình" bên dưới để lưu vĩnh viễn vị trí này.')
+                ->body('Hãy nhấn "💾 Lưu Toàn Bộ Cấu Hình" bên dưới để lưu vĩnh viễn.')
                 ->info()
-                ->duration(4000)
+                ->duration(3000)
                 ->send();
         }
     }
@@ -459,48 +474,37 @@ class InvoiceSettings extends Page implements HasForms
     }
 
     /**
-     * Di chuyển một Khối LÊN TRÊN
+     * Đổi độ rộng của Khối (Số cột 1-12)
      */
-    public function moveBlockUp(string $blockId): void
+    public function setBlockWidth(string $blockId, int $width): void
     {
         $this->ensureBlocksStructure();
-        $order = $this->data['blocks_order'] ?? array_keys($this->data['blocks_structure']);
-        $index = array_search($blockId, $order);
-        
-        if ($index !== false && $index > 0) {
-            $temp = $order[$index - 1];
-            $order[$index - 1] = $order[$index];
-            $order[$index] = $temp;
-            $this->data['blocks_order'] = array_values($order);
+        $found = false;
+        foreach ($this->gridLayout as &$item) {
+            if (($item['id'] ?? '') === $blockId) {
+                $item['w'] = $width;
+                $found = true;
+                break;
+            }
         }
-    }
+        unset($item);
 
-    /**
-     * Di chuyển một Khối XUỐNG DƯỚI
-     */
-    public function moveBlockDown(string $blockId): void
-    {
-        $this->ensureBlocksStructure();
-        $order = $this->data['blocks_order'] ?? array_keys($this->data['blocks_structure']);
-        $index = array_search($blockId, $order);
-        
-        if ($index !== false && $index < count($order) - 1) {
-            $temp = $order[$index + 1];
-            $order[$index + 1] = $order[$index];
-            $order[$index] = $temp;
-            $this->data['blocks_order'] = array_values($order);
+        if (!$found) {
+            $this->gridLayout[] = [
+                'id' => $blockId,
+                'x' => 0,
+                'y' => 0,
+                'w' => $width,
+                'h' => 3
+            ];
         }
-    }
 
-    /**
-     * Đổi độ rộng của Khối (Nửa dòng 50% / Cả dòng 100%)
-     */
-    public function setBlockWidth(string $blockId, string $width): void
-    {
-        $this->ensureBlocksStructure();
+        $this->data['grid_layout'] = $this->gridLayout;
         if (isset($this->data['blocks_structure'][$blockId])) {
-            $this->data['blocks_structure'][$blockId]['width'] = $width;
+            $this->data['blocks_structure'][$blockId]['width'] = ($width >= 12 ? 'full' : 'half');
         }
+
+        $this->dispatch('grid-layout-updated', layout: $this->gridLayout);
     }
 
     /**
@@ -549,15 +553,15 @@ class InvoiceSettings extends Page implements HasForms
     }
 
     /**
-     * Đảm bảo state blocks_structure và blocks_order đã được khởi tạo
+     * Đảm bảo state blocks_structure và grid_layout đã được khởi tạo
      */
     private function ensureBlocksStructure(): void
     {
         if (!isset($this->data['blocks_structure'])) {
             $this->data['blocks_structure'] = InvoiceConfigService::getCurrentConfig()['blocks_structure'] ?? InvoiceConfigService::getDefaultBlocksStructure();
         }
-        if (!isset($this->data['blocks_order'])) {
-            $this->data['blocks_order'] = InvoiceConfigService::getCurrentConfig()['blocks_order'] ?? array_keys($this->data['blocks_structure']);
+        if (empty($this->gridLayout)) {
+            $this->gridLayout = $this->data['grid_layout'] ?? InvoiceConfigService::getCurrentConfig()['grid_layout'] ?? InvoiceConfigService::getDefaultGridLayout();
         }
     }
 
@@ -570,8 +574,9 @@ class InvoiceSettings extends Page implements HasForms
         $state['active_preset'] = $this->activePreset;
         
         $this->ensureBlocksStructure();
-        $state['blocks_order'] = $this->data['blocks_order'];
+        $state['grid_layout'] = $this->gridLayout;
         $state['blocks_structure'] = $this->data['blocks_structure'];
+        $state['blocks_order'] = array_column($this->gridLayout, 'id');
 
         InvoiceConfigService::saveConfig($state);
         Cache::forget('settings_all');
@@ -607,18 +612,34 @@ class InvoiceSettings extends Page implements HasForms
     }
 
     /**
-     * Lấy danh sách các Khối và Phần tử con theo đúng thứ tự đã sắp xếp
+     * Lấy danh sách các Khối và Phần tử con sắp xếp theo tọa độ Grid (y, x)
      */
     public function getOrderedBlocksProperty(): array
     {
         $config = $this->previewConfig;
         $structure = $config['blocks_structure'] ?? InvoiceConfigService::getDefaultBlocksStructure();
-        $order = $config['blocks_order'] ?? array_keys($structure);
+        $gridLayout = $this->gridLayout ?: ($config['grid_layout'] ?? InvoiceConfigService::getDefaultGridLayout());
+
+        // Sắp xếp gridLayout theo y tăng dần, sau đó x tăng dần
+        usort($gridLayout, function ($a, $b) {
+            $ay = $a['y'] ?? 0;
+            $by = $b['y'] ?? 0;
+            if ($ay === $by) {
+                return ($a['x'] ?? 0) <=> ($b['x'] ?? 0);
+            }
+            return $ay <=> $by;
+        });
 
         $ordered = [];
-        foreach ($order as $bId) {
-            if (isset($structure[$bId])) {
+        foreach ($gridLayout as $item) {
+            $bId = $item['id'] ?? '';
+            if ($bId && isset($structure[$bId])) {
                 $block = $structure[$bId];
+                $block['grid_x'] = $item['x'] ?? 0;
+                $block['grid_y'] = $item['y'] ?? 0;
+                $block['grid_w'] = $item['w'] ?? 12;
+                $block['grid_h'] = $item['h'] ?? 3;
+
                 // Sắp xếp các phần tử con bên trong khối
                 $elOrder = $block['elements_order'] ?? array_keys($block['elements'] ?? []);
                 $orderedElements = [];
@@ -637,7 +658,18 @@ class InvoiceSettings extends Page implements HasForms
             }
         }
 
+        // Merge bất kỳ block nào còn thiếu
+        foreach ($structure as $bId => $block) {
+            if (!isset($ordered[$bId])) {
+                $block['grid_x'] = 0;
+                $block['grid_y'] = 99;
+                $block['grid_w'] = 12;
+                $block['grid_h'] = 3;
+                $block['ordered_elements'] = $block['elements'] ?? [];
+                $ordered[$bId] = $block;
+            }
+        }
+
         return $ordered;
     }
 }
-
