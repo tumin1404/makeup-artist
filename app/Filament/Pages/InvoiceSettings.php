@@ -214,21 +214,22 @@ class InvoiceSettings extends Page implements HasForms
                             Toggle::make('show_buyer_tax')
                                 ->label('Hiển thị Mã số thuế người mua')
                                 ->live(),
+
+                            Fieldset::make('Hình Thức Thanh Toán')
+                                ->columns(1)
+                                ->columnSpan(1)
+                                ->schema([
+                                    Toggle::make('show_payment_method')
+                                        ->label('Hiển thị Hình thức thanh toán (TM/CK)')
+                                        ->live(),
+
+                                    TextInput::make('payment_method_default')
+                                        ->label('Hình thức thanh toán mặc định')
+                                        ->placeholder('Ví dụ: Tiền mặt / Chuyển khoản')
+                                        ->disabled(fn ($get) => ! $get('show_payment_method'))
+                                        ->live(onBlur: true),
+                                ]),
                         ]),
-
-                        Fieldset::make('Hình Thức Thanh Toán')
-                            ->columns(1)
-                            ->schema([
-                                Toggle::make('show_payment_method')
-                                    ->label('Hiển thị Hình thức thanh toán trên hóa đơn (TM/CK)')
-                                    ->live(),
-
-                                TextInput::make('payment_method_default')
-                                    ->label('Hình thức thanh toán mặc định')
-                                    ->placeholder('Ví dụ: Tiền mặt / Chuyển khoản')
-                                    ->disabled(fn ($get) => ! $get('show_payment_method'))
-                                    ->live(onBlur: true),
-                            ]),
                     ])
                     ->collapsible(),
 
@@ -252,23 +253,24 @@ class InvoiceSettings extends Page implements HasForms
                             Toggle::make('show_column_discount')
                                 ->label('Cột Chiết khấu / Giảm giá')
                                 ->live(),
+
+                            Fieldset::make('Thuế Suất Giá Trị Gia Tăng (VAT)')
+                                ->columns(1)
+                                ->columnSpan(1)
+                                ->schema([
+                                    Toggle::make('show_column_tax')
+                                        ->label('Hiển thị Cột Thuế suất GTGT (%)')
+                                        ->live(),
+
+                                    TextInput::make('tax_rate_default')
+                                        ->label('Thuế suất GTGT mặc định (%)')
+                                        ->numeric()
+                                        ->default(0)
+                                        ->placeholder('Ví dụ: 8 hoặc 10')
+                                        ->disabled(fn ($get) => ! $get('show_column_tax'))
+                                        ->live(onBlur: true),
+                                ]),
                         ]),
-
-                        Fieldset::make('Thuế Suất Giá Trị Gia Tăng (VAT)')
-                            ->columns(1)
-                            ->schema([
-                                Toggle::make('show_column_tax')
-                                    ->label('Hiển thị Cột Thuế suất GTGT (%)')
-                                    ->live(),
-
-                                TextInput::make('tax_rate_default')
-                                    ->label('Thuế suất GTGT mặc định (%)')
-                                    ->numeric()
-                                    ->default(0)
-                                    ->placeholder('Ví dụ: 8 hoặc 10')
-                                    ->disabled(fn ($get) => ! $get('show_column_tax'))
-                                    ->live(onBlur: true),
-                            ]),
                     ])
                     ->collapsible(),
 
@@ -337,19 +339,22 @@ class InvoiceSettings extends Page implements HasForms
                     ->icon('heroicon-o-globe-alt')
                     ->description('Dành cho hóa đơn điện tử VAT cần link tra cứu và mã bảo mật')
                     ->schema([
-                        Fieldset::make('Tra Cứu Hóa Đơn Điện Tử')
-                            ->columns(1)
-                            ->schema([
-                                Toggle::make('show_lookup_link')
-                                    ->label('Hiển thị Link tra cứu HĐĐT')
-                                    ->live(),
+                        Grid::make(2)->schema([
+                            Fieldset::make('Tra Cứu Hóa Đơn Điện Tử')
+                                ->columns(1)
+                                ->columnSpan(1)
+                                ->schema([
+                                    Toggle::make('show_lookup_link')
+                                        ->label('Hiển thị Link tra cứu HĐĐT')
+                                        ->live(),
 
-                                TextInput::make('lookup_url')
-                                    ->label('Đường link cổng tra cứu')
-                                    ->placeholder('Ví dụ: https://tracuu.hoadondientu.gdt.gov.vn')
-                                    ->disabled(fn ($get) => ! $get('show_lookup_link'))
-                                    ->live(onBlur: true),
-                            ]),
+                                    TextInput::make('lookup_url')
+                                        ->label('Đường link cổng tra cứu')
+                                        ->placeholder('Ví dụ: https://tracuu.hoadondientu.gdt.gov.vn')
+                                        ->disabled(fn ($get) => ! $get('show_lookup_link'))
+                                        ->live(onBlur: true),
+                                ]),
+                        ]),
                     ])
                     ->collapsible(),
             ])
@@ -376,9 +381,10 @@ class InvoiceSettings extends Page implements HasForms
         $this->data = $newConfig;
 
         Notification::make()
-            ->title('Đã áp dụng mẫu ' . $preset['name'])
-            ->body('Các thiết lập và công tắc đã được nạp tự động theo chuẩn của mẫu hóa đơn này.')
-            ->success()
+            ->title('Đã nạp mẫu: ' . $preset['name'])
+            ->body('Cấu hình và vị trí mẫu đã được nạp vào khung xem trước để bạn chỉnh sửa. Lưu ý: Mẫu chưa được lưu vào hệ thống, hãy nhấn "💾 Lưu Toàn Bộ Cấu Hình" bên dưới để hoàn tất.')
+            ->info()
+            ->duration(6000)
             ->send();
     }
 
@@ -390,9 +396,10 @@ class InvoiceSettings extends Page implements HasForms
         $this->data['blocks_order'] = $newBlockOrder;
         
         Notification::make()
-            ->title('Đã cập nhật vị trí khối')
-            ->body('Thứ tự các khối trên hóa đơn đã được cập nhật.')
+            ->title('Đã đổi thứ tự khối trên khung xem trước')
+            ->body('Hãy nhấn nút "💾 Lưu Toàn Bộ Cấu Hình" bên dưới để lưu vĩnh viễn vị trí này.')
             ->info()
+            ->duration(4000)
             ->send();
     }
 
@@ -409,9 +416,10 @@ class InvoiceSettings extends Page implements HasForms
             $this->data['blocks_structure'][$blockId]['elements_order'] = $newElementOrder;
             
             Notification::make()
-                ->title('Đã đổi thứ tự phần tử')
-                ->body('Thứ tự phần tử trong khối ' . ($this->data['blocks_structure'][$blockId]['name'] ?? '') . ' đã được cập nhật.')
+                ->title('Đã đổi thứ tự phần tử trên khung xem trước')
+                ->body('Hãy nhấn nút "💾 Lưu Toàn Bộ Cấu Hình" bên dưới để lưu vĩnh viễn vị trí này.')
                 ->info()
+                ->duration(4000)
                 ->send();
         }
     }

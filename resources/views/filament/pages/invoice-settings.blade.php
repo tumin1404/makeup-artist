@@ -436,13 +436,12 @@
             <form wire:submit="save" class="space-y-4">
                 <div class="config-header-box">
                     <div>
-                        <h4 class="text-sm font-bold text-gray-900 dark:text-white">Bảng Cấu Hình & Tùy Biến Chi Tiết</h4>
-                        <p class="text-[11px] text-gray-500 dark:text-gray-400">Điều chỉnh các ô nhập liệu, kích thước, thuế suất và công tắc bật/tắt.</p>
+                        <h4 class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <x-filament::icon icon="heroicon-o-adjustments-horizontal" class="w-5 h-5 text-amber-500" />
+                            Bảng Cấu Hình & Tùy Biến Chi Tiết
+                        </h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Điều chỉnh các trường dữ liệu, kích thước, thuế suất và công tắc bật/tắt.</p>
                     </div>
-                    <button type="submit" class="btn-save-action">
-                        <x-filament::icon icon="heroicon-o-check" class="w-4 h-4 text-white" />
-                        Lưu Cấu Hình
-                    </button>
                 </div>
 
                 {{ $this->form }}
