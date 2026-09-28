@@ -563,7 +563,7 @@
                 <div id="visual-invoice-sheet" class="bg-white text-gray-900 border border-gray-300 rounded-xl p-6 sm:p-8 shadow-2xl w-full font-sans transition-all text-xs" style="color: #222; max-width: 840px;">
                     
                     {{-- CONTAINER LƯỚI 12 CỘT NGUYÊN BẢN --}}
-                    <div id="invoice-grid-canvas">
+                    <div id="invoice-grid-canvas" x-init="window.initInvoiceGridBuilder && window.initInvoiceGridBuilder($el)">
                         @foreach($this->orderedBlocks as $bId => $block)
                             @php
                                 $itemW = $block['grid_w'] ?? 12;
@@ -862,7 +862,7 @@
         </div>
     </div>
 
-    {{-- BỘ ĐIỀU KHIỂN KÉO THẢ & CO GIÃN THỊ GIÁC 2D NGUYÊN BẢN (POINTER EVENTS) --}}
+    {{-- BỘ ĐIỀU KHIỂN KÉO THẢ & CO GIÃN THỊ GIÁC 2D (POINTER EVENTS ENGINE) --}}
     <script>
         (function() {
             let floatingTooltipEl = null;
@@ -885,24 +885,24 @@
                 }
             }
 
-            function setupVisualGridEngine() {
-                const container = document.getElementById('invoice-grid-canvas');
+            window.initInvoiceGridBuilder = function(container) {
+                if (!container) {
+                    container = document.getElementById('invoice-grid-canvas');
+                }
                 if (!container) return;
 
-                // Xóa các event listener cũ nếu đã gắn để tránh trùng lặp
                 if (container.__gridEngineAttached) return;
                 container.__gridEngineAttached = true;
 
-                let activeMode = null; // 'resize' | 'drag'
+                let activeMode = null; // 'resize' | 'drag' | 'drag_pending'
                 let activeWidget = null;
                 let activeBlockId = null;
                 let startX = 0;
                 let startY = 0;
                 let startSpan = 12;
                 let dropPlaceholder = null;
-                let hasMoved = false;
 
-                // 1. POINTER DOWN EVENT DELEGATION
+                // 1. POINTER DOWN EVENT
                 container.addEventListener('pointerdown', function(e) {
                     const resizeHandle = e.target.closest('.resize-handle-zone-right, .resize-handle-zone-corner');
                     const widget = e.target.closest('.invoice-grid-widget');
@@ -914,18 +914,13 @@
                     startX = e.clientX;
                     startY = e.clientY;
                     startSpan = parseInt(widget.getAttribute('data-col-span') || '12');
-                    hasMoved = false;
 
                     if (resizeHandle) {
-                        // CHẾ ĐỘ 1: CO GIÃN ĐỘ RỘNG (RESIZE)
                         activeMode = 'resize';
                         e.preventDefault();
                         e.stopPropagation();
-                        try { resizeHandle.setPointerCapture(e.pointerId); } catch(err) {}
-
-                        showFloatingTooltip('↔ Độ rộng: ' + startSpan + '/12 Cột (' + Math.round(startSpan/12*100) + '%)', e.clientX, e.clientY);
+                        showFloatingTooltip('↔ Độ rộng: ' + startSpan + '/12 Cột (' + Math.round(startSpan / 12 * 100) + '%)', e.clientX, e.clientY);
                     } else {
-                        // CHẾ ĐỘ 2: CHỜ KÉO THẢ DI CHUYỂN (DRAG)
                         activeMode = 'drag_pending';
                     }
                 });
@@ -938,7 +933,6 @@
                     const deltaY = e.clientY - startY;
 
                     if (activeMode === 'resize') {
-                        // ĐANG CO GIÃN ĐỘ RỘNG
                         e.preventDefault();
                         const containerWidth = container.getBoundingClientRect().width;
                         const colUnit = containerWidth / 12;
@@ -953,12 +947,11 @@
                         const badge = activeWidget.querySelector('.pill-col-badge');
                         if (badge) badge.innerText = newSpan + '/12';
 
-                        showFloatingTooltip('↔ Độ rộng: ' + newSpan + '/12 Cột (' + Math.round(newSpan/12*100) + '%)', e.clientX, e.clientY);
+                        showFloatingTooltip('↔ Độ rộng: ' + newSpan + '/12 Cột (' + Math.round(newSpan / 12 * 100) + '%)', e.clientX, e.clientY);
                     } 
                     else if (activeMode === 'drag_pending' || activeMode === 'drag') {
-                        // BẮT ĐẦU KÉO THẢ KHI DI CHUYỂN QUA 6PX
                         if (activeMode === 'drag_pending') {
-                            if (Math.hypot(deltaX, deltaY) > 6) {
+                            if (Math.hypot(deltaX, deltaY) > 5) {
                                 activeMode = 'drag';
                                 activeWidget.classList.add('is-dragging');
                                 container.classList.add('canvas-drag-active');
@@ -974,7 +967,6 @@
 
                         if (activeMode === 'drag') {
                             e.preventDefault();
-                            // TÌM VỊ TRÍ THẢ PHÙ HỢP DỰA TRÊN KHOẢNG CÁCH GẦN NHẤT TỚI CÁC KHỐI
                             const widgets = Array.from(container.querySelectorAll('.invoice-grid-widget:not(.is-dragging)'));
                             let closestWidget = null;
                             let minDistance = Infinity;
@@ -989,9 +981,9 @@
                                 if (dist < minDistance) {
                                     minDistance = dist;
                                     closestWidget = w;
-                                    if (e.clientY < rect.top + rect.height * 0.3) {
+                                    if (e.clientY < rect.top + rect.height * 0.35) {
                                         insertBefore = true;
-                                    } else if (e.clientY > rect.bottom - rect.height * 0.3) {
+                                    } else if (e.clientY > rect.bottom - rect.height * 0.35) {
                                         insertBefore = false;
                                     } else {
                                         insertBefore = (e.clientX < centerX);
@@ -1031,7 +1023,6 @@
                             dropPlaceholder.remove();
                         }
 
-                        // Tính toán lại toàn bộ danh sách khối và gửi về Livewire
                         const allWidgets = Array.from(container.querySelectorAll('.invoice-grid-widget'));
                         let curY = 0;
                         let curX = 0;
@@ -1070,27 +1061,27 @@
                     activeWidget = null;
                     activeBlockId = null;
                 });
-            }
+            };
 
-            document.addEventListener('DOMContentLoaded', setupVisualGridEngine);
-            document.addEventListener('livewire:navigated', setupVisualGridEngine);
+            document.addEventListener('DOMContentLoaded', () => window.initInvoiceGridBuilder());
+            document.addEventListener('livewire:navigated', () => window.initInvoiceGridBuilder());
             document.addEventListener('livewire:initialized', function () {
-                setupVisualGridEngine();
+                window.initInvoiceGridBuilder();
                 if (window.Livewire) {
                     Livewire.hook('morph.updated', () => {
                         const c = document.getElementById('invoice-grid-canvas');
                         if (c) c.__gridEngineAttached = false;
-                        setTimeout(setupVisualGridEngine, 50);
+                        setTimeout(window.initInvoiceGridBuilder, 50);
                     });
                     Livewire.hook('commit', () => {
                         const c = document.getElementById('invoice-grid-canvas');
                         if (c) c.__gridEngineAttached = false;
-                        setTimeout(setupVisualGridEngine, 50);
+                        setTimeout(window.initInvoiceGridBuilder, 50);
                     });
                 }
             });
 
-            // IN THỬ TRỰC TIẾP TỪ CANVAS (ĐÃ FIX ĐÚNG CHUỖI SCRIPT KHÔNG BỊ NGẮT THẺ)
+            // IN THỬ TRỰC TIẾP TỪ CANVAS (KHÔNG DÙNG THẺ SCRIPT CON ĐỂ TRÁNH LỖI PHÂN TÍCH HTML)
             window.printInvoicePreview = function() {
                 const container = document.getElementById('visual-invoice-sheet');
                 if (!container) return;
@@ -1108,8 +1099,10 @@
                 });
 
                 const printWindow = window.open('', '_blank');
-                const scriptClose = '<' + '/script>';
-                const htmlContent = '<!DOCTYPE html>' +
+                if (!printWindow) return;
+
+                printWindow.document.open();
+                printWindow.document.write('<!DOCTYPE html>' +
                     '<html>' +
                     '<head>' +
                     '<title>In Hóa Đơn</title>' +
@@ -1134,12 +1127,13 @@
                     '</head>' +
                     '<body>' +
                     clone.outerHTML +
-                    '<script>window.onload = function() { window.print(); };' + scriptClose +
                     '</body>' +
-                    '</html>';
-
-                printWindow.document.write(htmlContent);
+                    '</html>');
                 printWindow.document.close();
+                printWindow.focus();
+                setTimeout(function() {
+                    printWindow.print();
+                }, 400);
             };
         })();
     </script>
