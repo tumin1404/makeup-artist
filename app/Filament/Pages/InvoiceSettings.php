@@ -92,32 +92,32 @@ class InvoiceSettings extends Page implements HasForms
 
                 Section::make('1. Thông Tin Đơn Vị Bán Hàng & Logo')
                     ->icon('heroicon-o-building-storefront')
-                    ->description('Bật/tắt và tùy chỉnh thông tin hiển thị của Studio / Doanh nghiệp')
+                    ->description('Bật/tắt các trường thông tin của Studio / Doanh nghiệp in trên hóa đơn')
                     ->schema([
                         Grid::make(2)->schema([
                             Toggle::make('show_logo')
-                                ->label('Hiển thị Logo')
-                                ->helperText('Sử dụng logo cấu hình từ cài đặt chung website')
+                                ->label('Hiển thị Logo Studio')
+                                ->helperText('Sử dụng logo cấu hình từ cài đặt chung')
                                 ->live(),
 
                             Toggle::make('show_seller_name')
                                 ->label('Hiển thị Tên Studio / Công ty')
                                 ->live(),
 
-                            Toggle::make('show_seller_tax')
-                                ->label('Hiển thị Mã số thuế bên bán (MST)')
+                            Toggle::make('show_seller_phone')
+                                ->label('Hiển thị Hotline / Số điện thoại')
                                 ->live(),
 
                             Toggle::make('show_seller_address')
                                 ->label('Hiển thị Địa chỉ trụ sở / Chi nhánh')
                                 ->live(),
 
-                            Toggle::make('show_seller_phone')
-                                ->label('Hiển thị Hotline / Số điện thoại')
+                            Toggle::make('show_seller_tax')
+                                ->label('Hiển thị Mã số thuế bên bán (MST)')
                                 ->live(),
 
                             Toggle::make('show_seller_bank')
-                                ->label('Hiển thị Số tài khoản ngân hàng')
+                                ->label('Hiển thị Số tài khoản & Ngân hàng')
                                 ->live(),
                         ]),
                     ])
@@ -138,15 +138,18 @@ class InvoiceSettings extends Page implements HasForms
                                 ->label('Phụ đề / Mẫu biểu căn cứ')
                                 ->placeholder('Ví dụ: Makeup Artist & Beauty Studio hoặc Mẫu số 02 - VT')
                                 ->live(onBlur: true),
+                        ]),
+                        Grid::make(2)->schema([
+                            Toggle::make('show_invoice_number')
+                                ->label('Hiển thị Số hóa đơn (VD: #00012)')
+                                ->live(),
 
                             TextInput::make('invoice_number_prefix')
                                 ->label('Tiền tố Mã hóa đơn')
                                 ->placeholder('Ví dụ: HD, BH, XK (để trống nếu không cần)')
+                                ->disabled(fn ($get) => ! $get('show_invoice_number'))
+                                ->helperText('Chỉ có hiệu lực khi công tắc bên cạnh được bật')
                                 ->live(onBlur: true),
-
-                            Toggle::make('show_invoice_number')
-                                ->label('Hiển thị Số hóa đơn (VD: #00012)')
-                                ->live(),
 
                             Toggle::make('show_invoice_symbol')
                                 ->label('Hiển thị Ký hiệu mẫu số (VD: 1C26TAV)')
@@ -155,7 +158,8 @@ class InvoiceSettings extends Page implements HasForms
                             TextInput::make('invoice_symbol')
                                 ->label('Ký hiệu Hóa đơn')
                                 ->placeholder('Ví dụ: 1C26TAV')
-                                ->visible(fn ($get) => $get('show_invoice_symbol'))
+                                ->disabled(fn ($get) => ! $get('show_invoice_symbol'))
+                                ->helperText('Chỉ có hiệu lực khi công tắc bên cạnh được bật')
                                 ->live(onBlur: true),
 
                             Toggle::make('show_cqt_code')
@@ -165,7 +169,8 @@ class InvoiceSettings extends Page implements HasForms
                             TextInput::make('cqt_code')
                                 ->label('Mã CQT mẫu')
                                 ->placeholder('Ví dụ: 003447FDA6C1054E3CBBBB4A4C5AE4D9FF')
-                                ->visible(fn ($get) => $get('show_cqt_code'))
+                                ->disabled(fn ($get) => ! $get('show_cqt_code'))
+                                ->helperText('Chỉ có hiệu lực khi công tắc bên cạnh được bật')
                                 ->live(onBlur: true),
                         ]),
                     ])
@@ -180,14 +185,6 @@ class InvoiceSettings extends Page implements HasForms
                                 ->label('Hiển thị Họ tên khách hàng')
                                 ->live(),
 
-                            Toggle::make('show_buyer_company')
-                                ->label('Hiển thị Tên đơn vị / Công ty mua')
-                                ->live(),
-
-                            Toggle::make('show_buyer_tax')
-                                ->label('Hiển thị Mã số thuế người mua')
-                                ->live(),
-
                             Toggle::make('show_buyer_phone')
                                 ->label('Hiển thị Số điện thoại / Zalo khách')
                                 ->live(),
@@ -196,16 +193,24 @@ class InvoiceSettings extends Page implements HasForms
                                 ->label('Hiển thị Địa chỉ khách hàng')
                                 ->live(),
 
+                            Toggle::make('show_buyer_company')
+                                ->label('Hiển thị Tên đơn vị / Công ty mua')
+                                ->live(),
+
+                            Toggle::make('show_buyer_tax')
+                                ->label('Hiển thị Mã số thuế người mua')
+                                ->live(),
+
                             Toggle::make('show_payment_method')
                                 ->label('Hiển thị Hình thức thanh toán (TM/CK)')
                                 ->live(),
-
-                            TextInput::make('payment_method_default')
-                                ->label('Hình thức thanh toán mặc định')
-                                ->placeholder('Ví dụ: Tiền mặt / Chuyển khoản')
-                                ->visible(fn ($get) => $get('show_payment_method'))
-                                ->live(onBlur: true),
                         ]),
+                        TextInput::make('payment_method_default')
+                            ->label('Hình thức thanh toán mặc định')
+                            ->placeholder('Ví dụ: Tiền mặt / Chuyển khoản')
+                            ->disabled(fn ($get) => ! $get('show_payment_method'))
+                            ->helperText('Chỉ áp dụng khi công tắc "Hiển thị Hình thức thanh toán" được bật')
+                            ->live(onBlur: true),
                     ])
                     ->collapsible(),
 
@@ -213,7 +218,7 @@ class InvoiceSettings extends Page implements HasForms
                     ->icon('heroicon-o-table-cells')
                     ->description('Cấu hình các cột trong bảng danh sách dịch vụ và sản phẩm')
                     ->schema([
-                        Grid::make(3)->schema([
+                        Grid::make(2)->schema([
                             Toggle::make('show_column_code')
                                 ->label('Cột Mã hàng / Quy cách')
                                 ->live(),
@@ -238,7 +243,8 @@ class InvoiceSettings extends Page implements HasForms
                                 ->label('Thuế suất GTGT mặc định (%)')
                                 ->numeric()
                                 ->default(0)
-                                ->visible(fn ($get) => $get('show_column_tax'))
+                                ->disabled(fn ($get) => ! $get('show_column_tax'))
+                                ->helperText('Chỉ áp dụng khi công tắc "Cột Thuế suất GTGT" được bật')
                                 ->live(onBlur: true),
                         ]),
                     ])
@@ -262,7 +268,7 @@ class InvoiceSettings extends Page implements HasForms
                                 ->live(),
 
                             Toggle::make('show_amount_in_words')
-                                ->label('Tự động đọc số tiền bằng chữ tiếng Việt (Bắt buộc theo chuẩn kế toán)')
+                                ->label('Tự động đọc số tiền bằng chữ tiếng Việt (Chuẩn kế toán)')
                                 ->live(),
                         ]),
                     ])
@@ -272,12 +278,10 @@ class InvoiceSettings extends Page implements HasForms
                     ->icon('heroicon-o-qr-code')
                     ->description('Tích hợp mã VietQR Napas247 tự động điền số tiền và cú pháp chuyển khoản')
                     ->schema([
-                        Grid::make(2)->schema([
-                            Toggle::make('show_vietqr')
-                                ->label('Hiển thị Khung VietQR Chuyển Khoản')
-                                ->helperText('Quét mã là tự động nạp chính xác STK + Số tiền + Cú pháp chuyển khoản trên mọi app ngân hàng')
-                                ->live(),
-                        ]),
+                        Toggle::make('show_vietqr')
+                            ->label('Hiển thị Khung VietQR Chuyển Khoản')
+                            ->helperText('Quét mã là tự động nạp chính xác STK + Số tiền + Cú pháp chuyển khoản trên mọi app ngân hàng')
+                            ->live(),
                     ])
                     ->collapsible(),
 
@@ -292,8 +296,9 @@ class InvoiceSettings extends Page implements HasForms
                         Textarea::make('notes_content')
                             ->label('Nội dung Ghi chú / Lưu ý / Điều khoản')
                             ->rows(3)
-                            ->visible(fn ($get) => $get('show_notes'))
+                            ->disabled(fn ($get) => ! $get('show_notes'))
                             ->placeholder('Ví dụ: Quý khách vui lòng kiểm tra diện mạo trước khi rời studio...')
+                            ->helperText('Chỉ hiển thị trên hóa đơn khi công tắc bên trên được bật')
                             ->live(onBlur: true),
 
                         TextInput::make('footer_thank_you')
@@ -315,7 +320,8 @@ class InvoiceSettings extends Page implements HasForms
                             TextInput::make('lookup_url')
                                 ->label('Đường link cổng tra cứu')
                                 ->placeholder('Ví dụ: https://tracuu.hoadondientu.gdt.gov.vn')
-                                ->visible(fn ($get) => $get('show_lookup_link'))
+                                ->disabled(fn ($get) => ! $get('show_lookup_link'))
+                                ->helperText('Chỉ kích hoạt khi công tắc bên cạnh được bật')
                                 ->live(onBlur: true),
                         ]),
                     ])
