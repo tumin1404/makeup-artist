@@ -276,7 +276,7 @@
             transition: background 0.2s ease;
         }
 
-        /* Khi đang kéo thả: hiện các đường lưới 12 cột mờ hỗ trợ căn dòng */
+        /* Khi đang kéo thả: hiện các đường dóng 12 cột mờ hỗ trợ căn dòng */
         #invoice-grid-canvas.canvas-drag-active {
             background-image: repeating-linear-gradient(
                 to right,
@@ -862,266 +862,285 @@
         </div>
     </div>
 
-    {{-- BỘ ĐIỀU KHIỂN KÉO THẢ & CO GIÃN THỊ GIÁC 2D NGUYÊN BẢN (KHÔNG PHỤ THUỘC CDN) --}}
+    {{-- BỘ ĐIỀU KHIỂN KÉO THẢ & CO GIÃN THỊ GIÁC 2D NGUYÊN BẢN (POINTER EVENTS) --}}
     <script>
-        let isInvoiceGridEngineActive = false;
-        let floatingTooltipEl = null;
+        (function() {
+            let floatingTooltipEl = null;
 
-        function showFloatingTooltip(text, x, y) {
-            if (!floatingTooltipEl) {
-                floatingTooltipEl = document.createElement('div');
-                floatingTooltipEl.className = 'floating-resize-tooltip';
-                document.body.appendChild(floatingTooltipEl);
+            function showFloatingTooltip(text, x, y) {
+                if (!floatingTooltipEl) {
+                    floatingTooltipEl = document.createElement('div');
+                    floatingTooltipEl.className = 'floating-resize-tooltip';
+                    document.body.appendChild(floatingTooltipEl);
+                }
+                floatingTooltipEl.innerHTML = text;
+                floatingTooltipEl.style.left = x + 'px';
+                floatingTooltipEl.style.top = y + 'px';
+                floatingTooltipEl.style.display = 'flex';
             }
-            floatingTooltipEl.innerHTML = text;
-            floatingTooltipEl.style.left = x + 'px';
-            floatingTooltipEl.style.top = y + 'px';
-            floatingTooltipEl.style.display = 'flex';
-        }
 
-        function hideFloatingTooltip() {
-            if (floatingTooltipEl) {
-                floatingTooltipEl.style.display = 'none';
+            function hideFloatingTooltip() {
+                if (floatingTooltipEl) {
+                    floatingTooltipEl.style.display = 'none';
+                }
             }
-        }
 
-        function initVisualInvoiceGridEngine() {
-            const container = document.getElementById('invoice-grid-canvas');
-            if (!container) return;
+            function setupVisualGridEngine() {
+                const container = document.getElementById('invoice-grid-canvas');
+                if (!container) return;
 
-            const widgets = Array.from(container.querySelectorAll('.invoice-grid-widget'));
-            let draggedWidget = null;
-            let dropPlaceholder = null;
+                // Xóa các event listener cũ nếu đã gắn để tránh trùng lặp
+                if (container.__gridEngineAttached) return;
+                container.__gridEngineAttached = true;
 
-            widgets.forEach(widget => {
-                const blockId = widget.getAttribute('data-block-id');
-                const resizeRight = widget.querySelector('.resize-handle-zone-right');
-                const resizeCorner = widget.querySelector('.resize-handle-zone-corner');
+                let activeMode = null; // 'resize' | 'drag'
+                let activeWidget = null;
+                let activeBlockId = null;
+                let startX = 0;
+                let startY = 0;
+                let startSpan = 12;
+                let dropPlaceholder = null;
+                let hasMoved = false;
 
-                // 1. XỬ LÝ CO GIÃN ĐỘ RỘNG (RESIZE HANDLE) BẰNG POINTER EVENTS
-                const setupResize = (handle) => {
-                    if (!handle) return;
-                    handle.onpointerdown = (e) => {
-                        e.stopPropagation();
+                // 1. POINTER DOWN EVENT DELEGATION
+                container.addEventListener('pointerdown', function(e) {
+                    const resizeHandle = e.target.closest('.resize-handle-zone-right, .resize-handle-zone-corner');
+                    const widget = e.target.closest('.invoice-grid-widget');
+
+                    if (!widget) return;
+
+                    activeWidget = widget;
+                    activeBlockId = widget.getAttribute('data-block-id');
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    startSpan = parseInt(widget.getAttribute('data-col-span') || '12');
+                    hasMoved = false;
+
+                    if (resizeHandle) {
+                        // CHẾ ĐỘ 1: CO GIÃN ĐỘ RỘNG (RESIZE)
+                        activeMode = 'resize';
                         e.preventDefault();
-                        
-                        const startX = e.clientX;
-                        const startSpan = parseInt(widget.getAttribute('data-col-span') || '12');
-                        const containerWidth = container.getBoundingClientRect().width;
-                        const colWidth = (containerWidth - 154) / 12;
+                        e.stopPropagation();
+                        try { resizeHandle.setPointerCapture(e.pointerId); } catch(err) {}
 
                         showFloatingTooltip('↔ Độ rộng: ' + startSpan + '/12 Cột (' + Math.round(startSpan/12*100) + '%)', e.clientX, e.clientY);
-
-                        const onPointerMove = (moveEv) => {
-                            const deltaX = moveEv.clientX - startX;
-                            let newSpan = Math.round((startSpan * colWidth + deltaX) / colWidth);
-                            if (newSpan < 2) newSpan = 2;
-                            if (newSpan > 12) newSpan = 12;
-
-                            // Cập nhật class cột trực tiếp
-                            widget.className = widget.className.replace(/col-span-\d+/, 'col-span-' + newSpan);
-                            widget.setAttribute('data-col-span', newSpan);
-                            
-                            const badge = widget.querySelector('.pill-col-badge');
-                            if (badge) badge.innerText = newSpan + '/12';
-
-                            showFloatingTooltip('↔ Độ rộng: ' + newSpan + '/12 Cột (' + Math.round(newSpan/12*100) + '%)', moveEv.clientX, moveEv.clientY);
-                        };
-
-                        const onPointerUp = () => {
-                            window.removeEventListener('pointermove', onPointerMove);
-                            window.removeEventListener('pointerup', onPointerUp);
-                            hideFloatingTooltip();
-
-                            const finalSpan = parseInt(widget.getAttribute('data-col-span') || '12');
-                            if (window.Livewire) {
-                                @this.updateWidgetSpan(blockId, finalSpan);
-                            }
-                        };
-
-                        window.addEventListener('pointermove', onPointerMove);
-                        window.addEventListener('pointerup', onPointerUp);
-                    };
-                };
-
-                setupResize(resizeRight);
-                setupResize(resizeCorner);
-
-                // 2. XỬ LÝ KÉO THẢ DI CHUYỂN VỊ TRÍ (DRAG & DROP) BẰNG HTML5 DRAG
-                widget.setAttribute('draggable', 'true');
-
-                widget.ondragstart = (e) => {
-                    // Nếu bấm vào vùng resize thì không bắt đầu drag
-                    if (e.target.classList.contains('resize-handle-zone-right') || e.target.classList.contains('resize-handle-zone-corner')) {
-                        e.preventDefault();
-                        return;
-                    }
-
-                    draggedWidget = widget;
-                    e.dataTransfer.effectAllowed = 'move';
-                    e.dataTransfer.setData('text/plain', blockId);
-                    
-                    setTimeout(() => {
-                        widget.classList.add('is-dragging');
-                        container.classList.add('canvas-drag-active');
-                    }, 10);
-
-                    if (!dropPlaceholder) {
-                        dropPlaceholder = document.createElement('div');
-                        dropPlaceholder.className = 'grid-drop-placeholder';
-                    }
-                    const span = widget.getAttribute('data-col-span') || '12';
-                    dropPlaceholder.className = 'grid-drop-placeholder col-span-' + span;
-                    widget.parentNode.insertBefore(dropPlaceholder, widget.nextSibling);
-                };
-
-                widget.ondragend = () => {
-                    widget.classList.remove('is-dragging');
-                    container.classList.remove('canvas-drag-active');
-                    if (dropPlaceholder && dropPlaceholder.parentNode) {
-                        dropPlaceholder.parentNode.insertBefore(widget, dropPlaceholder);
-                        dropPlaceholder.remove();
-                    }
-                    draggedWidget = null;
-                    commitGridLayout(container);
-                };
-
-                widget.ondragover = (e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = 'move';
-                    if (!draggedWidget || draggedWidget === widget) return;
-
-                    const rect = widget.getBoundingClientRect();
-                    const midY = rect.top + rect.height / 2;
-                    const midX = rect.left + rect.width / 2;
-
-                    if (e.clientY < midY || (Math.abs(e.clientY - midY) < 30 && e.clientX < midX)) {
-                        widget.parentNode.insertBefore(dropPlaceholder, widget);
                     } else {
-                        widget.parentNode.insertBefore(dropPlaceholder, widget.nextSibling);
+                        // CHẾ ĐỘ 2: CHỜ KÉO THẢ DI CHUYỂN (DRAG)
+                        activeMode = 'drag_pending';
                     }
-                };
-            });
-
-            container.ondragover = (e) => {
-                e.preventDefault();
-            };
-
-            container.ondrop = (e) => {
-                e.preventDefault();
-                if (draggedWidget && dropPlaceholder && dropPlaceholder.parentNode) {
-                    dropPlaceholder.parentNode.insertBefore(draggedWidget, dropPlaceholder);
-                    dropPlaceholder.remove();
-                    commitGridLayout(container);
-                }
-            };
-        }
-
-        // TÍNH TOÁN VÀ ĐỒNG BỘ TOÀN BỘ TỌA ĐỘ VỀ LIVEWIRE
-        function commitGridLayout(container) {
-            const allWidgets = Array.from(container.querySelectorAll('.invoice-grid-widget'));
-            let currentY = 0;
-            let currentX = 0;
-
-            const newLayout = allWidgets.map(el => {
-                const bId = el.getAttribute('data-block-id');
-                const w = parseInt(el.getAttribute('data-col-span') || '12');
-                
-                if (currentX + w > 12) {
-                    currentY += 3;
-                    currentX = 0;
-                }
-                
-                const item = {
-                    id: bId,
-                    x: currentX,
-                    y: currentY,
-                    w: w,
-                    h: 3
-                };
-
-                currentX += w;
-                if (currentX >= 12) {
-                    currentY += 3;
-                    currentX = 0;
-                }
-                return item;
-            });
-
-            if (window.Livewire && newLayout.length > 0) {
-                @this.updateGridLayout(newLayout);
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', initVisualInvoiceGridEngine);
-        document.addEventListener('livewire:navigated', initVisualInvoiceGridEngine);
-        document.addEventListener('livewire:initialized', function () {
-            initVisualInvoiceGridEngine();
-            if (window.Livewire) {
-                Livewire.hook('morph.updated', () => {
-                    setTimeout(initVisualInvoiceGridEngine, 60);
                 });
-                Livewire.hook('commit', () => {
-                    setTimeout(initVisualInvoiceGridEngine, 60);
-                });
-            }
-        });
 
-        // IN THỬ TRỰC TIẾP TỪ CANVAS
-        function printInvoicePreview() {
-            const container = document.getElementById('visual-invoice-sheet');
-            if (!container) return;
+                // 2. POINTER MOVE EVENT
+                window.addEventListener('pointermove', function(e) {
+                    if (!activeMode || !activeWidget) return;
 
-            const clone = container.cloneNode(true);
-            
-            // Xóa sạch các vùng handle resize và huy hiệu hover
-            clone.querySelectorAll('.resize-handle-zone-right, .resize-handle-zone-corner, .widget-hover-pill').forEach(el => el.remove());
-            
-            clone.querySelectorAll('.invoice-grid-widget').forEach(el => {
-                el.style.border = 'none';
-                el.style.background = 'transparent';
-                el.style.boxShadow = 'none';
-                el.style.padding = '0';
-                el.style.cursor = 'default';
-            });
+                    const deltaX = e.clientX - startX;
+                    const deltaY = e.clientY - startY;
 
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>In Hóa Đơn</title>
-                    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-                    <style>
-                        body { background: white; padding: 20px; font-family: sans-serif; color: #111; }
-                        #invoice-grid-canvas { display: grid !important; grid-template-columns: repeat(12, 1fr) !important; gap: 16px !important; width: 100% !important; }
-                        .col-span-1 { grid-column: span 1 !important; }
-                        .col-span-2 { grid-column: span 2 !important; }
-                        .col-span-3 { grid-column: span 3 !important; }
-                        .col-span-4 { grid-column: span 4 !important; }
-                        .col-span-5 { grid-column: span 5 !important; }
-                        .col-span-6 { grid-column: span 6 !important; }
-                        .col-span-7 { grid-column: span 7 !important; }
-                        .col-span-8 { grid-column: span 8 !important; }
-                        .col-span-9 { grid-column: span 9 !important; }
-                        .col-span-10 { grid-column: span 10 !important; }
-                        .col-span-11 { grid-column: span 11 !important; }
-                        .col-span-12 { grid-column: span 12 !important; }
-                        @media print {
-                            body { padding: 0; }
-                            @page { margin: 10mm; }
+                    if (activeMode === 'resize') {
+                        // ĐANG CO GIÃN ĐỘ RỘNG
+                        e.preventDefault();
+                        const containerWidth = container.getBoundingClientRect().width;
+                        const colUnit = containerWidth / 12;
+
+                        let newSpan = Math.round(startSpan + (deltaX / colUnit));
+                        if (newSpan < 2) newSpan = 2;
+                        if (newSpan > 12) newSpan = 12;
+
+                        activeWidget.className = activeWidget.className.replace(/col-span-\d+/, 'col-span-' + newSpan);
+                        activeWidget.setAttribute('data-col-span', newSpan);
+
+                        const badge = activeWidget.querySelector('.pill-col-badge');
+                        if (badge) badge.innerText = newSpan + '/12';
+
+                        showFloatingTooltip('↔ Độ rộng: ' + newSpan + '/12 Cột (' + Math.round(newSpan/12*100) + '%)', e.clientX, e.clientY);
+                    } 
+                    else if (activeMode === 'drag_pending' || activeMode === 'drag') {
+                        // BẮT ĐẦU KÉO THẢ KHI DI CHUYỂN QUA 6PX
+                        if (activeMode === 'drag_pending') {
+                            if (Math.hypot(deltaX, deltaY) > 6) {
+                                activeMode = 'drag';
+                                activeWidget.classList.add('is-dragging');
+                                container.classList.add('canvas-drag-active');
+
+                                if (!dropPlaceholder) {
+                                    dropPlaceholder = document.createElement('div');
+                                }
+                                const span = activeWidget.getAttribute('data-col-span') || '12';
+                                dropPlaceholder.className = 'grid-drop-placeholder col-span-' + span;
+                                activeWidget.parentNode.insertBefore(dropPlaceholder, activeWidget.nextSibling);
+                            }
                         }
-                    </style>
-                </head>
-                <body>
-                    ${clone.outerHTML}
-                    <script>
-                        window.onload = function() { window.print(); }
-                    <\/script>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-        }
+
+                        if (activeMode === 'drag') {
+                            e.preventDefault();
+                            // TÌM VỊ TRÍ THẢ PHÙ HỢP DỰA TRÊN KHOẢNG CÁCH GẦN NHẤT TỚI CÁC KHỐI
+                            const widgets = Array.from(container.querySelectorAll('.invoice-grid-widget:not(.is-dragging)'));
+                            let closestWidget = null;
+                            let minDistance = Infinity;
+                            let insertBefore = false;
+
+                            for (const w of widgets) {
+                                const rect = w.getBoundingClientRect();
+                                const centerX = rect.left + rect.width / 2;
+                                const centerY = rect.top + rect.height / 2;
+                                const dist = Math.hypot(e.clientX - centerX, e.clientY - centerY);
+
+                                if (dist < minDistance) {
+                                    minDistance = dist;
+                                    closestWidget = w;
+                                    if (e.clientY < rect.top + rect.height * 0.3) {
+                                        insertBefore = true;
+                                    } else if (e.clientY > rect.bottom - rect.height * 0.3) {
+                                        insertBefore = false;
+                                    } else {
+                                        insertBefore = (e.clientX < centerX);
+                                    }
+                                }
+                            }
+
+                            if (closestWidget && dropPlaceholder) {
+                                if (insertBefore) {
+                                    container.insertBefore(dropPlaceholder, closestWidget);
+                                } else {
+                                    container.insertBefore(dropPlaceholder, closestWidget.nextSibling);
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // 3. POINTER UP EVENT
+                window.addEventListener('pointerup', function(e) {
+                    if (!activeMode) return;
+
+                    hideFloatingTooltip();
+
+                    if (activeMode === 'resize') {
+                        const finalSpan = parseInt(activeWidget.getAttribute('data-col-span') || '12');
+                        if (window.Livewire && activeBlockId) {
+                            @this.updateWidgetSpan(activeBlockId, finalSpan);
+                        }
+                    } 
+                    else if (activeMode === 'drag') {
+                        activeWidget.classList.remove('is-dragging');
+                        container.classList.remove('canvas-drag-active');
+
+                        if (dropPlaceholder && dropPlaceholder.parentNode) {
+                            dropPlaceholder.parentNode.insertBefore(activeWidget, dropPlaceholder);
+                            dropPlaceholder.remove();
+                        }
+
+                        // Tính toán lại toàn bộ danh sách khối và gửi về Livewire
+                        const allWidgets = Array.from(container.querySelectorAll('.invoice-grid-widget'));
+                        let curY = 0;
+                        let curX = 0;
+
+                        const newLayout = allWidgets.map(el => {
+                            const bId = el.getAttribute('data-block-id');
+                            const w = parseInt(el.getAttribute('data-col-span') || '12');
+
+                            if (curX + w > 12) {
+                                curY += 3;
+                                curX = 0;
+                            }
+
+                            const item = {
+                                id: bId,
+                                x: curX,
+                                y: curY,
+                                w: w,
+                                h: 3
+                            };
+
+                            curX += w;
+                            if (curX >= 12) {
+                                curY += 3;
+                                curX = 0;
+                            }
+                            return item;
+                        });
+
+                        if (window.Livewire && newLayout.length > 0) {
+                            @this.updateGridLayout(newLayout);
+                        }
+                    }
+
+                    activeMode = null;
+                    activeWidget = null;
+                    activeBlockId = null;
+                });
+            }
+
+            document.addEventListener('DOMContentLoaded', setupVisualGridEngine);
+            document.addEventListener('livewire:navigated', setupVisualGridEngine);
+            document.addEventListener('livewire:initialized', function () {
+                setupVisualGridEngine();
+                if (window.Livewire) {
+                    Livewire.hook('morph.updated', () => {
+                        const c = document.getElementById('invoice-grid-canvas');
+                        if (c) c.__gridEngineAttached = false;
+                        setTimeout(setupVisualGridEngine, 50);
+                    });
+                    Livewire.hook('commit', () => {
+                        const c = document.getElementById('invoice-grid-canvas');
+                        if (c) c.__gridEngineAttached = false;
+                        setTimeout(setupVisualGridEngine, 50);
+                    });
+                }
+            });
+
+            // IN THỬ TRỰC TIẾP TỪ CANVAS (ĐÃ FIX ĐÚNG CHUỖI SCRIPT KHÔNG BỊ NGẮT THẺ)
+            window.printInvoicePreview = function() {
+                const container = document.getElementById('visual-invoice-sheet');
+                if (!container) return;
+
+                const clone = container.cloneNode(true);
+                
+                clone.querySelectorAll('.resize-handle-zone-right, .resize-handle-zone-corner, .widget-hover-pill').forEach(el => el.remove());
+                
+                clone.querySelectorAll('.invoice-grid-widget').forEach(el => {
+                    el.style.border = 'none';
+                    el.style.background = 'transparent';
+                    el.style.boxShadow = 'none';
+                    el.style.padding = '0';
+                    el.style.cursor = 'default';
+                });
+
+                const printWindow = window.open('', '_blank');
+                const scriptClose = '<' + '/script>';
+                const htmlContent = '<!DOCTYPE html>' +
+                    '<html>' +
+                    '<head>' +
+                    '<title>In Hóa Đơn</title>' +
+                    '<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">' +
+                    '<style>' +
+                    'body { background: white; padding: 20px; font-family: sans-serif; color: #111; }' +
+                    '#invoice-grid-canvas { display: grid !important; grid-template-columns: repeat(12, 1fr) !important; gap: 16px !important; width: 100% !important; }' +
+                    '.col-span-1 { grid-column: span 1 !important; }' +
+                    '.col-span-2 { grid-column: span 2 !important; }' +
+                    '.col-span-3 { grid-column: span 3 !important; }' +
+                    '.col-span-4 { grid-column: span 4 !important; }' +
+                    '.col-span-5 { grid-column: span 5 !important; }' +
+                    '.col-span-6 { grid-column: span 6 !important; }' +
+                    '.col-span-7 { grid-column: span 7 !important; }' +
+                    '.col-span-8 { grid-column: span 8 !important; }' +
+                    '.col-span-9 { grid-column: span 9 !important; }' +
+                    '.col-span-10 { grid-column: span 10 !important; }' +
+                    '.col-span-11 { grid-column: span 11 !important; }' +
+                    '.col-span-12 { grid-column: span 12 !important; }' +
+                    '@media print { body { padding: 0; } @page { margin: 10mm; } }' +
+                    '</style>' +
+                    '</head>' +
+                    '<body>' +
+                    clone.outerHTML +
+                    '<script>window.onload = function() { window.print(); };' + scriptClose +
+                    '</body>' +
+                    '</html>';
+
+                printWindow.document.write(htmlContent);
+                printWindow.document.close();
+            };
+        })();
     </script>
 </x-filament-panels::page>
