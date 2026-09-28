@@ -885,145 +885,116 @@
                 }
             }
 
-            window.initInvoiceGridBuilder = function(container) {
-                if (!container) {
-                    container = document.getElementById('invoice-grid-canvas');
-                }
-                if (!container) return;
+            let activeMode = null; // 'resize' | 'drag' | 'drag_pending'
+            let activeWidget = null;
+            let activeBlockId = null;
+            let activeContainer = null;
+            let startX = 0;
+            let startY = 0;
+            let startSpan = 12;
+            let dropPlaceholder = null;
 
-                if (container.__gridEngineAttached) return;
-                container.__gridEngineAttached = true;
+            function onPointerMove(e) {
+                if (!activeMode || !activeWidget || !activeContainer) return;
 
-                let activeMode = null; // 'resize' | 'drag' | 'drag_pending'
-                let activeWidget = null;
-                let activeBlockId = null;
-                let startX = 0;
-                let startY = 0;
-                let startSpan = 12;
-                let dropPlaceholder = null;
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
 
-                // 1. POINTER DOWN EVENT
-                container.addEventListener('pointerdown', function(e) {
-                    const resizeHandle = e.target.closest('.resize-handle-zone-right, .resize-handle-zone-corner');
-                    const widget = e.target.closest('.invoice-grid-widget');
+                if (activeMode === 'resize') {
+                    e.preventDefault();
+                    const containerWidth = activeContainer.getBoundingClientRect().width;
+                    const colUnit = containerWidth / 12;
 
-                    if (!widget) return;
+                    let newSpan = Math.round(startSpan + (deltaX / colUnit));
+                    if (newSpan < 2) newSpan = 2;
+                    if (newSpan > 12) newSpan = 12;
 
-                    activeWidget = widget;
-                    activeBlockId = widget.getAttribute('data-block-id');
-                    startX = e.clientX;
-                    startY = e.clientY;
-                    startSpan = parseInt(widget.getAttribute('data-col-span') || '12');
+                    activeWidget.className = activeWidget.className.replace(/col-span-\d+/, 'col-span-' + newSpan);
+                    activeWidget.setAttribute('data-col-span', newSpan);
 
-                    if (resizeHandle) {
-                        activeMode = 'resize';
-                        e.preventDefault();
-                        e.stopPropagation();
-                        showFloatingTooltip('↔ Độ rộng: ' + startSpan + '/12 Cột (' + Math.round(startSpan / 12 * 100) + '%)', e.clientX, e.clientY);
-                    } else {
-                        activeMode = 'drag_pending';
-                    }
-                });
+                    const badge = activeWidget.querySelector('.pill-col-badge');
+                    if (badge) badge.innerText = newSpan + '/12';
 
-                // 2. POINTER MOVE EVENT
-                window.addEventListener('pointermove', function(e) {
-                    if (!activeMode || !activeWidget) return;
+                    showFloatingTooltip('↔ Độ rộng: ' + newSpan + '/12 Cột (' + Math.round(newSpan / 12 * 100) + '%)', e.clientX, e.clientY);
+                } 
+                else if (activeMode === 'drag_pending' || activeMode === 'drag') {
+                    if (activeMode === 'drag_pending') {
+                        if (Math.hypot(deltaX, deltaY) > 5) {
+                            activeMode = 'drag';
+                            activeWidget.classList.add('is-dragging');
+                            activeContainer.classList.add('canvas-drag-active');
 
-                    const deltaX = e.clientX - startX;
-                    const deltaY = e.clientY - startY;
-
-                    if (activeMode === 'resize') {
-                        e.preventDefault();
-                        const containerWidth = container.getBoundingClientRect().width;
-                        const colUnit = containerWidth / 12;
-
-                        let newSpan = Math.round(startSpan + (deltaX / colUnit));
-                        if (newSpan < 2) newSpan = 2;
-                        if (newSpan > 12) newSpan = 12;
-
-                        activeWidget.className = activeWidget.className.replace(/col-span-\d+/, 'col-span-' + newSpan);
-                        activeWidget.setAttribute('data-col-span', newSpan);
-
-                        const badge = activeWidget.querySelector('.pill-col-badge');
-                        if (badge) badge.innerText = newSpan + '/12';
-
-                        showFloatingTooltip('↔ Độ rộng: ' + newSpan + '/12 Cột (' + Math.round(newSpan / 12 * 100) + '%)', e.clientX, e.clientY);
-                    } 
-                    else if (activeMode === 'drag_pending' || activeMode === 'drag') {
-                        if (activeMode === 'drag_pending') {
-                            if (Math.hypot(deltaX, deltaY) > 5) {
-                                activeMode = 'drag';
-                                activeWidget.classList.add('is-dragging');
-                                container.classList.add('canvas-drag-active');
-
-                                if (!dropPlaceholder) {
-                                    dropPlaceholder = document.createElement('div');
-                                }
-                                const span = activeWidget.getAttribute('data-col-span') || '12';
-                                dropPlaceholder.className = 'grid-drop-placeholder col-span-' + span;
-                                activeWidget.parentNode.insertBefore(dropPlaceholder, activeWidget.nextSibling);
+                            if (!dropPlaceholder) {
+                                dropPlaceholder = document.createElement('div');
                             }
+                            const span = activeWidget.getAttribute('data-col-span') || '12';
+                            dropPlaceholder.className = 'grid-drop-placeholder col-span-' + span;
+                            activeWidget.parentNode.insertBefore(dropPlaceholder, activeWidget.nextSibling);
                         }
+                    }
 
-                        if (activeMode === 'drag') {
-                            e.preventDefault();
-                            const widgets = Array.from(container.querySelectorAll('.invoice-grid-widget:not(.is-dragging)'));
-                            let closestWidget = null;
-                            let minDistance = Infinity;
-                            let insertBefore = false;
+                    if (activeMode === 'drag') {
+                        e.preventDefault();
+                        const widgets = Array.from(activeContainer.querySelectorAll('.invoice-grid-widget:not(.is-dragging)'));
+                        let closestWidget = null;
+                        let minDistance = Infinity;
+                        let insertBefore = false;
 
-                            for (const w of widgets) {
-                                const rect = w.getBoundingClientRect();
-                                const centerX = rect.left + rect.width / 2;
-                                const centerY = rect.top + rect.height / 2;
-                                const dist = Math.hypot(e.clientX - centerX, e.clientY - centerY);
+                        for (const w of widgets) {
+                            const rect = w.getBoundingClientRect();
+                            const centerX = rect.left + rect.width / 2;
+                            const centerY = rect.top + rect.height / 2;
+                            const dist = Math.hypot(e.clientX - centerX, e.clientY - centerY);
 
-                                if (dist < minDistance) {
-                                    minDistance = dist;
-                                    closestWidget = w;
-                                    if (e.clientY < rect.top + rect.height * 0.35) {
-                                        insertBefore = true;
-                                    } else if (e.clientY > rect.bottom - rect.height * 0.35) {
-                                        insertBefore = false;
-                                    } else {
-                                        insertBefore = (e.clientX < centerX);
-                                    }
-                                }
-                            }
-
-                            if (closestWidget && dropPlaceholder) {
-                                if (insertBefore) {
-                                    container.insertBefore(dropPlaceholder, closestWidget);
+                            if (dist < minDistance) {
+                                minDistance = dist;
+                                closestWidget = w;
+                                if (e.clientY < rect.top + rect.height * 0.35) {
+                                    insertBefore = true;
+                                } else if (e.clientY > rect.bottom - rect.height * 0.35) {
+                                    insertBefore = false;
                                 } else {
-                                    container.insertBefore(dropPlaceholder, closestWidget.nextSibling);
+                                    insertBefore = (e.clientX < centerX);
                                 }
                             }
                         }
+
+                        if (closestWidget && dropPlaceholder) {
+                            if (insertBefore) {
+                                activeContainer.insertBefore(dropPlaceholder, closestWidget);
+                            } else {
+                                activeContainer.insertBefore(dropPlaceholder, closestWidget.nextSibling);
+                            }
+                        }
                     }
-                });
+                }
+            }
 
-                // 3. POINTER UP EVENT
-                window.addEventListener('pointerup', function(e) {
-                    if (!activeMode) return;
+            function onPointerUp(e) {
+                window.removeEventListener('pointermove', onPointerMove);
+                window.removeEventListener('pointerup', onPointerUp);
 
-                    hideFloatingTooltip();
+                if (!activeMode) return;
 
-                    if (activeMode === 'resize') {
-                        const finalSpan = parseInt(activeWidget.getAttribute('data-col-span') || '12');
-                        if (window.Livewire && activeBlockId) {
-                            @this.updateWidgetSpan(activeBlockId, finalSpan);
-                        }
-                    } 
-                    else if (activeMode === 'drag') {
-                        activeWidget.classList.remove('is-dragging');
-                        container.classList.remove('canvas-drag-active');
+                hideFloatingTooltip();
 
-                        if (dropPlaceholder && dropPlaceholder.parentNode) {
-                            dropPlaceholder.parentNode.insertBefore(activeWidget, dropPlaceholder);
-                            dropPlaceholder.remove();
-                        }
+                if (activeMode === 'resize') {
+                    const finalSpan = parseInt(activeWidget.getAttribute('data-col-span') || '12');
+                    if (window.Livewire && activeBlockId) {
+                        @this.updateWidgetSpan(activeBlockId, finalSpan);
+                    }
+                } 
+                else if (activeMode === 'drag') {
+                    activeWidget.classList.remove('is-dragging');
+                    if (activeContainer) activeContainer.classList.remove('canvas-drag-active');
 
-                        const allWidgets = Array.from(container.querySelectorAll('.invoice-grid-widget'));
+                    if (dropPlaceholder && dropPlaceholder.parentNode) {
+                        dropPlaceholder.parentNode.insertBefore(activeWidget, dropPlaceholder);
+                        dropPlaceholder.remove();
+                    }
+
+                    if (activeContainer) {
+                        const allWidgets = Array.from(activeContainer.querySelectorAll('.invoice-grid-widget'));
                         let curY = 0;
                         let curX = 0;
 
@@ -1056,11 +1027,53 @@
                             @this.updateGridLayout(newLayout);
                         }
                     }
+                }
 
-                    activeMode = null;
-                    activeWidget = null;
-                    activeBlockId = null;
-                });
+                activeMode = null;
+                activeWidget = null;
+                activeBlockId = null;
+                activeContainer = null;
+            }
+
+            function onPointerDown(e) {
+                const container = e.currentTarget;
+                const resizeHandle = e.target.closest('.resize-handle-zone-right, .resize-handle-zone-corner');
+                const widget = e.target.closest('.invoice-grid-widget');
+
+                if (!widget || !container) return;
+
+                activeContainer = container;
+                activeWidget = widget;
+                activeBlockId = widget.getAttribute('data-block-id');
+                startX = e.clientX;
+                startY = e.clientY;
+                startSpan = parseInt(widget.getAttribute('data-col-span') || '12');
+
+                if (resizeHandle) {
+                    activeMode = 'resize';
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showFloatingTooltip('↔ Độ rộng: ' + startSpan + '/12 Cột (' + Math.round(startSpan / 12 * 100) + '%)', e.clientX, e.clientY);
+                } else {
+                    activeMode = 'drag_pending';
+                }
+
+                // Gắn listener duy nhất khi bắt đầu kéo và tự gỡ khi thả chuột
+                window.addEventListener('pointermove', onPointerMove);
+                window.addEventListener('pointerup', onPointerUp);
+            }
+
+            window.initInvoiceGridBuilder = function(container) {
+                if (!container) {
+                    container = document.getElementById('invoice-grid-canvas');
+                }
+                if (!container) return;
+
+                if (container.__gridEnginePointerDown) {
+                    container.removeEventListener('pointerdown', container.__gridEnginePointerDown);
+                }
+                container.__gridEnginePointerDown = onPointerDown;
+                container.addEventListener('pointerdown', onPointerDown);
             };
 
             document.addEventListener('DOMContentLoaded', () => window.initInvoiceGridBuilder());
@@ -1068,16 +1081,8 @@
             document.addEventListener('livewire:initialized', function () {
                 window.initInvoiceGridBuilder();
                 if (window.Livewire) {
-                    Livewire.hook('morph.updated', () => {
-                        const c = document.getElementById('invoice-grid-canvas');
-                        if (c) c.__gridEngineAttached = false;
-                        setTimeout(window.initInvoiceGridBuilder, 50);
-                    });
-                    Livewire.hook('commit', () => {
-                        const c = document.getElementById('invoice-grid-canvas');
-                        if (c) c.__gridEngineAttached = false;
-                        setTimeout(window.initInvoiceGridBuilder, 50);
-                    });
+                    Livewire.hook('morph.updated', () => setTimeout(window.initInvoiceGridBuilder, 50));
+                    Livewire.hook('commit', () => setTimeout(window.initInvoiceGridBuilder, 50));
                 }
             });
 

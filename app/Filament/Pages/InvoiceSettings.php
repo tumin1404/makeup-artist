@@ -408,13 +408,6 @@ class InvoiceSettings extends Page implements HasForms
                 $this->data['blocks_structure'][$bId]['width'] = (($item['w'] ?? 12) >= 12) ? 'full' : 'half';
             }
         }
-
-        Notification::make()
-            ->title('Đã đổi vị trí các khối trên hóa đơn')
-            ->body('Hãy nhấn "💾 Lưu Toàn Bộ Cấu Hình" bên dưới để lưu vĩnh viễn vị trí này.')
-            ->info()
-            ->duration(2500)
-            ->send();
     }
 
     /**
@@ -447,13 +440,6 @@ class InvoiceSettings extends Page implements HasForms
         if (isset($this->data['blocks_structure'][$blockId])) {
             $this->data['blocks_structure'][$blockId]['width'] = ($newSpan >= 12 ? 'full' : 'half');
         }
-
-        Notification::make()
-            ->title('Đã đổi độ rộng: ' . $newSpan . '/12 cột (' . round($newSpan / 12 * 100) . '%)')
-            ->body('Hãy nhấn "💾 Lưu Toàn Bộ Cấu Hình" bên dưới để lưu vĩnh viễn.')
-            ->info()
-            ->duration(2500)
-            ->send();
     }
 
     /**
@@ -465,13 +451,6 @@ class InvoiceSettings extends Page implements HasForms
 
         if (isset($this->data['blocks_structure'][$blockId])) {
             $this->data['blocks_structure'][$blockId]['elements_order'] = $newElementOrder;
-            
-            Notification::make()
-                ->title('Đã đổi thứ tự phần tử trên khung xem trước')
-                ->body('Hãy nhấn "💾 Lưu Toàn Bộ Cấu Hình" bên dưới để lưu vĩnh viễn.')
-                ->info()
-                ->duration(2500)
-                ->send();
         }
     }
 
