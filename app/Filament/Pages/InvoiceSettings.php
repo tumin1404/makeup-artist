@@ -306,7 +306,7 @@ class InvoiceSettings extends Page implements HasForms
                     ->description('Tích hợp mã VietQR Napas247 tự động điền số tiền và cú pháp chuyển khoản')
                     ->schema([
                         Toggle::make('show_vietqr')
-                            ->label('Hiển thị Khung VietQR Chuyển Khoan')
+                            ->label('Hiển thị Khung VietQR Chuyển Khoản')
                             ->helperText('Quét mã là tự động nạp chính xác STK + Số tiền + Cú pháp chuyển khoản trên mọi app ngân hàng')
                             ->live(),
                     ])
@@ -385,8 +385,6 @@ class InvoiceSettings extends Page implements HasForms
         $this->data = $newConfig;
         $this->data['grid_layout'] = $this->gridLayout;
 
-        $this->dispatch('grid-layout-updated', layout: $this->gridLayout);
-
         Notification::make()
             ->title('Đã nạp mẫu: ' . $preset['name'])
             ->body('Cấu hình và vị trí mẫu đã được nạp vào khung xem trước để bạn chỉnh sửa. Lưu ý: Mẫu chưa được lưu vào hệ thống, hãy nhấn "💾 Lưu Toàn Bộ Cấu Hình" bên dưới để hoàn tất.')
@@ -396,14 +394,13 @@ class InvoiceSettings extends Page implements HasForms
     }
 
     /**
-     * Cập nhật toàn bộ Layout Gridstack 2D từ sự kiện kéo thả / co giãn
+     * Cập nhật toàn bộ Layout Grid 2D từ sự kiện kéo thả
      */
     public function updateGridLayout(array $newLayout): void
     {
         $this->gridLayout = $newLayout;
         $this->data['grid_layout'] = $newLayout;
         
-        // Đồng bộ lại width vào blocks_structure
         $this->ensureBlocksStructure();
         foreach ($newLayout as $item) {
             $bId = $item['id'] ?? '';
@@ -413,10 +410,49 @@ class InvoiceSettings extends Page implements HasForms
         }
 
         Notification::make()
-            ->title('Đã đổi vị trí & kích thước trên lưới 2D')
+            ->title('Đã đổi vị trí các khối trên hóa đơn')
             ->body('Hãy nhấn "💾 Lưu Toàn Bộ Cấu Hình" bên dưới để lưu vĩnh viễn vị trí này.')
             ->info()
-            ->duration(3000)
+            ->duration(2500)
+            ->send();
+    }
+
+    /**
+     * Cập nhật độ rộng (Số cột 1-12) của widget từ thao tác kéo viền trực tiếp
+     */
+    public function updateWidgetSpan(string $blockId, int $newSpan): void
+    {
+        $this->ensureBlocksStructure();
+        $found = false;
+        foreach ($this->gridLayout as &$item) {
+            if (($item['id'] ?? '') === $blockId) {
+                $item['w'] = $newSpan;
+                $found = true;
+                break;
+            }
+        }
+        unset($item);
+
+        if (!$found) {
+            $this->gridLayout[] = [
+                'id' => $blockId,
+                'x' => 0,
+                'y' => 0,
+                'w' => $newSpan,
+                'h' => 3
+            ];
+        }
+
+        $this->data['grid_layout'] = $this->gridLayout;
+        if (isset($this->data['blocks_structure'][$blockId])) {
+            $this->data['blocks_structure'][$blockId]['width'] = ($newSpan >= 12 ? 'full' : 'half');
+        }
+
+        Notification::make()
+            ->title('Đã đổi độ rộng: ' . $newSpan . '/12 cột (' . round($newSpan / 12 * 100) . '%)')
+            ->body('Hãy nhấn "💾 Lưu Toàn Bộ Cấu Hình" bên dưới để lưu vĩnh viễn.')
+            ->info()
+            ->duration(2500)
             ->send();
     }
 
@@ -434,7 +470,7 @@ class InvoiceSettings extends Page implements HasForms
                 ->title('Đã đổi thứ tự phần tử trên khung xem trước')
                 ->body('Hãy nhấn "💾 Lưu Toàn Bộ Cấu Hình" bên dưới để lưu vĩnh viễn.')
                 ->info()
-                ->duration(3000)
+                ->duration(2500)
                 ->send();
         }
     }
@@ -474,40 +510,6 @@ class InvoiceSettings extends Page implements HasForms
     }
 
     /**
-     * Đổi độ rộng của Khối (Số cột 1-12)
-     */
-    public function setBlockWidth(string $blockId, int $width): void
-    {
-        $this->ensureBlocksStructure();
-        $found = false;
-        foreach ($this->gridLayout as &$item) {
-            if (($item['id'] ?? '') === $blockId) {
-                $item['w'] = $width;
-                $found = true;
-                break;
-            }
-        }
-        unset($item);
-
-        if (!$found) {
-            $this->gridLayout[] = [
-                'id' => $blockId,
-                'x' => 0,
-                'y' => 0,
-                'w' => $width,
-                'h' => 3
-            ];
-        }
-
-        $this->data['grid_layout'] = $this->gridLayout;
-        if (isset($this->data['blocks_structure'][$blockId])) {
-            $this->data['blocks_structure'][$blockId]['width'] = ($width >= 12 ? 'full' : 'half');
-        }
-
-        $this->dispatch('grid-layout-updated', layout: $this->gridLayout);
-    }
-
-    /**
      * Đổi căn lề của Khối (Trái / Giữa / Phải)
      */
     public function setBlockAlign(string $blockId, string $align): void
@@ -524,8 +526,8 @@ class InvoiceSettings extends Page implements HasForms
     public function setElementAlign(string $blockId, string $elementId, string $align): void
     {
         $this->ensureBlocksStructure();
-        if (isset($this->data['blocks_structure'][$blockId]['elements'][$elementId])) {
-            $this->data['blocks_structure'][$blockId]['elements'][$elementId]['align'] = $align;
+        if (isset($this->data['blocks_structure'][$blockId])) {
+            $this->data['blocks_structure'][$blockId]['align'] = $align;
         }
     }
 
@@ -535,8 +537,8 @@ class InvoiceSettings extends Page implements HasForms
     public function setElementSize(string $blockId, string $elementId, string $size): void
     {
         $this->ensureBlocksStructure();
-        if (isset($this->data['blocks_structure'][$blockId]['elements'][$elementId])) {
-            $this->data['blocks_structure'][$blockId]['elements'][$elementId]['size'] = $size;
+        if (isset($this->data['blocks_structure'][$blockId])) {
+            $this->data['blocks_structure'][$blockId]['size'] = $size;
         }
     }
 
@@ -546,9 +548,9 @@ class InvoiceSettings extends Page implements HasForms
     public function toggleElementVisibility(string $blockId, string $elementId): void
     {
         $this->ensureBlocksStructure();
-        if (isset($this->data['blocks_structure'][$blockId]['elements'][$elementId])) {
-            $curr = $this->data['blocks_structure'][$blockId]['elements'][$elementId]['visible'] ?? true;
-            $this->data['blocks_structure'][$blockId]['elements'][$elementId]['visible'] = !$curr;
+        if (isset($this->data['blocks_structure'][$blockId])) {
+            $curr = $this->data['blocks_structure'][$blockId]['visible'] ?? true;
+            $this->data['blocks_structure'][$blockId]['visible'] = !$curr;
         }
     }
 
